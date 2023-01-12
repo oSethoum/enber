@@ -1,0 +1,16 @@
+package main
+
+import (
+	"{{.Config.Pkg}}/db"
+	"{{.Config.Pkg}}/routes"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func main() {
+	db.Init()
+	defer db.Client.Close()
+	app := fiber.New()
+	routes.Init(e)
+	app.Listen(":{{.Config.Server.Port}}")
+}

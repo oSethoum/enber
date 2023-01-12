@@ -1,0 +1,30 @@
+package db
+
+import (
+	"{{.Config.Pkg}}/ent"
+	"{{.Config.Pkg}}/ent/migrate"
+	"context"
+	"log"
+
+	"entgo.io/ent/dialect"
+)
+
+var (
+	Client *ent.Client
+)
+
+func Init() {
+	db, err := ent.Open(dialect.SQLite, "db.sqlite?_fk=1")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	db.Schema.Create(context.Background(),
+		migrate.WithDropColumn(true),
+		migrate.WithDropIndex(true),
+		migrate.WithGlobalUniqueID(true),
+		migrate.WithForeignKeys(true),
+	)
+
+	Client = db
+}

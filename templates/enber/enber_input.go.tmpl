@@ -1,0 +1,87 @@
+package ent
+{{$g := .}}
+{{$len := len .TypesImports}}
+{{if gt $len 0}}
+import (
+    {{- range .TypesImports}}
+    "{{.}}"
+    {{- end}}
+)
+{{- end}}
+
+{{range .InputNodes}}
+type Create{{.Name}}Input struct {
+{{- range .CreateFields}}
+{{.Name}} {{.Type}} `json:"{{camel .Name}},omitempty"`
+{{- end}}
+{{- range .CreateEdges}}
+{{.Name}} {{.Type}} `json:"{{.JTag}}"`
+{{- end}}
+}
+
+func (i *Create{{.Name}}Input) Mutate(m *{{.Name}}Mutation) {
+{{- range .CreateFields}}
+    {{- if .Check}}
+    if v := i.{{.Name}}; v != nil {{- if .Clear }}&& *v {{- end}}{
+        m.{{.Set}}({{.SetParam}})
+    }
+    {{- else}}
+     m.{{.Set}}({{.SetParam}})
+    {{- end}}
+{{- end -}}
+{{- range .CreateEdges}}
+    {{- if .Check}}
+    if v := i.{{.Name}}; v != nil {{- if .Clear }}&& *v {{- end}}{
+      m.{{.Set}}({{.SetParam}})
+    }
+    {{- else}}
+    m.{{.Set}}({{.SetParam}})
+    {{- end}}
+{{- end}}
+}
+
+func (c *{{.Name}}Create) SetInput(i *Create{{.Name}}Input) {
+    i.Mutate(c.Mutation())
+}
+
+type Update{{.Name}}Input struct {
+{{- range .UpdateFields}}
+{{.Name}} {{.Type}} `json:"{{camel .Name}},omitempty"`
+{{- end}}
+
+{{- range .UpdateEdges}}
+{{.Name}} {{.Type}} `json:"{{.JTag}}"`
+{{- end}}
+}
+
+
+func (i *Update{{.Name}}Input) Mutate(m *{{.Name}}Mutation) {
+{{- range .UpdateFields}}
+    {{- if .Check}}
+    if v := i.{{.Name}}; v != nil {{- if .Clear }}&& *v {{- end}}{
+        m.{{.Set}}({{.SetParam}})
+    }
+    {{- else}}
+     m.{{.Set}}({{.SetParam}})
+    {{- end}}
+{{- end}}
+
+{{- range .UpdateEdges}}
+    {{- if .Check}}
+    if v := i.{{.Name}}; v != nil {{- if .Clear }}&& *v {{- end}}{
+      m.{{.Set}}({{.SetParam}})
+    }
+    {{- else}}
+    m.{{.Set}}({{.SetParam}})
+    {{- end}}
+{{- end}}
+}
+
+func (u *{{.Name}}Update) SetInput(i *Update{{.Name}}Input) {
+    i.Mutate(u.Mutation())
+}
+
+func (u *{{.Name}}UpdateOne) SetInput(i *Update{{.Name}}Input) {
+    i.Mutate(u.Mutation())
+}
+{{end}}
