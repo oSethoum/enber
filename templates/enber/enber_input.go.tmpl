@@ -10,7 +10,7 @@ import (
 {{- end}}
 
 {{range .InputNodes}}
-type Create{{.Name}}Input struct {
+type {{.Name}}CreateInput struct {
 {{- range .CreateFields}}
 {{.Name}} {{.Type}} `json:"{{camel .Name}},omitempty"`
 {{- end}}
@@ -19,7 +19,7 @@ type Create{{.Name}}Input struct {
 {{- end}}
 }
 
-func (i *Create{{.Name}}Input) Mutate(m *{{.Name}}Mutation) {
+func (i *{{.Name}}CreateInput) Mutate(m *{{.Name}}Mutation) {
 {{- range .CreateFields}}
     {{- if .Check}}
     if v := i.{{.Name}}; v != nil {{- if .Clear }}&& *v {{- end}}{
@@ -40,11 +40,12 @@ func (i *Create{{.Name}}Input) Mutate(m *{{.Name}}Mutation) {
 {{- end}}
 }
 
-func (c *{{.Name}}Create) SetInput(i *Create{{.Name}}Input) {
+func (c *{{.Name}}Create) SetInput(i *{{.Name}}CreateInput) *{{.Name}}Create {
     i.Mutate(c.Mutation())
+    return c
 }
 
-type Update{{.Name}}Input struct {
+type {{.Name}}UpdateInput struct {
 {{- range .UpdateFields}}
 {{.Name}} {{.Type}} `json:"{{camel .Name}},omitempty"`
 {{- end}}
@@ -55,7 +56,7 @@ type Update{{.Name}}Input struct {
 }
 
 
-func (i *Update{{.Name}}Input) Mutate(m *{{.Name}}Mutation) {
+func (i *{{.Name}}UpdateInput) Mutate(m *{{.Name}}Mutation) {
 {{- range .UpdateFields}}
     {{- if .Check}}
     if v := i.{{.Name}}; v != nil {{- if .Clear }}&& *v {{- end}}{
@@ -77,11 +78,13 @@ func (i *Update{{.Name}}Input) Mutate(m *{{.Name}}Mutation) {
 {{- end}}
 }
 
-func (u *{{.Name}}Update) SetInput(i *Update{{.Name}}Input) {
+func (u *{{.Name}}Update) SetInput(i *{{.Name}}UpdateInput) *{{.Name}}Update {
     i.Mutate(u.Mutation())
+    return u
 }
 
-func (u *{{.Name}}UpdateOne) SetInput(i *Update{{.Name}}Input) {
-    i.Mutate(u.Mutation())
+func (u *{{.Name}}UpdateOne) SetInput(i *{{.Name}}UpdateInput) *{{.Name}}UpdateOne {
+    i.Mutate(u.Mutation()) 
+    return u
 }
 {{end}}

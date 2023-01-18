@@ -12,10 +12,9 @@ import (
 )
 
 var (
-	_camel   = gen.Funcs["camel"].(func(string) string)
 	snake    = gen.Funcs["snake"].(func(string) string)
 	singular = gen.Funcs["singular"].(func(string) string)
-	camel    = func(s string) string { return _camel(snake(s)) }
+	camel    = func(s string) string { return gen.Funcs["camel"].(func(string) string)(snake(s)) }
 )
 
 func vin[T comparable](v T, a []T) bool {
@@ -49,9 +48,9 @@ func parseTemplate(filename string, data *templateData) string {
 	return out.String()
 }
 
-func (e *extension) parseInputNode(nodes []*gen.Type) []*inputNode {
+func (e *extension) parseInputNode(g *gen.Graph) {
 	inputNodes := []*inputNode{}
-	for _, n := range nodes {
+	for _, n := range g.Nodes {
 		if len(n.Edges)+len(n.Fields) == 0 {
 			continue
 		}
@@ -70,6 +69,8 @@ func (e *extension) parseInputNode(nodes []*gen.Type) []*inputNode {
 				continue
 			}
 			var clearField *inputField
+			fieldName := f.StructField()
+			fieldType := f.Type.String()
 			isSlice := strings.HasPrefix(f.Type.String(), "[]")
 			if f.Type.PkgPath != "" && !vin(f.Type.PkgPath, e.TemplateData.TypesImports) {
 				e.TemplateData.TypesImports = append(e.TemplateData.TypesImports, f.Type.PkgPath)
@@ -81,26 +82,26 @@ func (e *extension) parseInputNode(nodes []*gen.Type) []*inputNode {
 				}
 			}
 			createField := &inputField{
-				Name:     f.StructField(),
-				Type:     f.Type.String(),
-				Set:      "Set" + f.StructField(),
-				SetParam: "i." + f.StructField(),
+				Name:     fieldName,
+				Type:     fieldType,
+				Set:      "Set" + fieldName,
+				SetParam: "i." + fieldName,
 			}
 			updateField := &inputField{
-				Name:     f.StructField(),
-				Type:     "*" + f.Type.String(),
-				Set:      "Set" + f.StructField(),
-				SetParam: "*i." + f.StructField(),
+				Name:     fieldName,
+				Type:     "*" + fieldType,
+				Set:      "Set" + fieldName,
+				SetParam: "*i." + fieldName,
 			}
 
 			if isSlice {
 				updateField.Check = true
-				updateField.SetParam = "i." + f.StructField()
-				updateField.Type = f.Type.String()
+				updateField.SetParam = "i." + fieldName
+				updateField.Type = fieldType
 				if f.Optional {
 					clearField = &inputField{
-						Name:  "Clear" + f.StructField(),
-						Set:   "Clear" + f.StructField(),
+						Name:  "Clear" + fieldName,
+						Set:   "Clear" + fieldName,
 						Type:  "*bool",
 						Clear: true,
 						Check: true,
@@ -108,17 +109,17 @@ func (e *extension) parseInputNode(nodes []*gen.Type) []*inputNode {
 				}
 			} else {
 				if f.Optional {
-					createField.Type = "*" + f.Type.String()
+					createField.Type = "*" + fieldType
 					createField.Check = true
-					createField.SetParam = "*i." + f.StructField()
+					createField.SetParam = "*i." + fieldName
 
-					updateField.Set = "Set" + f.StructField()
-					updateField.Type = "*" + f.Type.String()
+					updateField.Set = "Set" + fieldName
+					updateField.Type = "*" + fieldType
 					updateField.Check = true
 
 					clearField = &inputField{
-						Name:  "Clear" + f.StructField(),
-						Set:   "Clear" + f.StructField(),
+						Name:  "Clear" + fieldName,
+						Set:   "Clear" + fieldName,
 						Type:  "*bool",
 						Check: true,
 						Clear: true,
@@ -126,11 +127,15 @@ func (e *extension) parseInputNode(nodes []*gen.Type) []*inputNode {
 				}
 
 				if f.Default {
-					createField.SetParam = "*i." + f.StructField()
-					createField.Type = "*" + f.Type.String()
+					createField.SetParam = "*i." + fieldName
+					createField.Type = "*" + fieldType
 					createField.Check = true
 
-					updateField.Set = "Set" + f.StructField()
+					updateField.Set = "Set" + fieldName
+					updateField.Check = true
+				}
+
+				if f.Type.ConstName() != "TypeJSON" {
 					updateField.Check = true
 				}
 			}
@@ -143,54 +148,53 @@ func (e *extension) parseInputNode(nodes []*gen.Type) []*inputNode {
 		}
 
 		for _, e := range n.EdgesWithID() {
+			edgeName := e.StructField()
 			if e.Unique {
 				createEdge := &inputEdge{
-					Name:     e.StructField() + "ID",
+					Name:     edgeName + "ID",
 					Type:     e.Type.IDType.String(),
-					JTag:     camel(e.StructField()) + "ID" + ",omitempty",
-					Set:      "Set" + e.StructField() + "ID",
-					SetParam: "i." + e.StructField() + "ID",
+					JTag:     camel(edgeName) + "ID" + ",omitempty",
+					Set:      "Set" + edgeName + "ID",
+					SetParam: "i." + edgeName + "ID",
 				}
 				updateEdge := &inputEdge{
-					Name:     e.StructField() + "ID",
+					Name:     edgeName + "ID",
 					Type:     "*" + e.Type.IDType.String(),
-					Set:      "Set" + e.StructField() + "ID",
-					JTag:     camel(e.StructField()) + "ID" + ",omitempty",
-					SetParam: "*i." + e.StructField() + "ID",
+					Set:      "Set" + edgeName + "ID",
+					JTag:     camel(edgeName) + "ID" + ",omitempty",
+					SetParam: "*i." + edgeName + "ID",
 					Check:    true,
 				}
 				if e.Optional {
-					// ex: SetNillable
-					createEdge.Set = "Set" + e.StructField() + "ID"
-					updateEdge.Set = "Set" + e.StructField() + "ID"
+					createEdge.Set = "Set" + edgeName + "ID"
+					updateEdge.Set = "Set" + edgeName + "ID"
 					createEdge.Type = "*" + createEdge.Type
-					// ex: delete two lines
-					createEdge.SetParam = "*i." + e.StructField() + "ID"
+					createEdge.SetParam = "*i." + edgeName + "ID"
 					createEdge.Check = true
 				}
 				in.CreateEdges = append(in.CreateEdges, createEdge)
 				in.UpdateEdges = append(in.UpdateEdges, updateEdge)
 			} else {
 				ea := &inputEdge{
-					Name:  "Add" + singular(e.StructField()) + "IDs",
-					Set:   "Add" + singular(e.StructField()) + "IDs",
+					Name:  "Add" + singular(edgeName) + "IDs",
+					Set:   "Add" + singular(edgeName) + "IDs",
 					Type:  "[]" + e.Type.IDType.String(),
-					JTag:  camel("Add"+singular(e.StructField())) + "IDs" + ",omitempty",
+					JTag:  camel("Add"+singular(edgeName)) + "IDs" + ",omitempty",
 					Slice: true,
 				}
 				ea.SetParam = "i." + ea.Name + "..."
 				er := &inputEdge{
-					Name:  "Remove" + singular(e.StructField()) + "IDs",
-					Set:   "Remove" + singular(e.StructField()) + "IDs",
-					JTag:  camel("Remove"+singular(e.StructField())) + "IDs" + ",omitempty",
+					Name:  "Remove" + singular(edgeName) + "IDs",
+					Set:   "Remove" + singular(edgeName) + "IDs",
+					JTag:  camel("Remove"+singular(edgeName)) + "IDs" + ",omitempty",
 					Type:  "[]" + e.Type.IDType.String(),
 					Slice: true,
 				}
 				er.SetParam = "i." + er.Name + "..."
 				ec := &inputEdge{
-					Name:  "Clear" + e.StructField(),
-					Set:   "Clear" + e.StructField(),
-					JTag:  camel("Clear"+e.StructField()) + ",omitempty",
+					Name:  "Clear" + edgeName,
+					Set:   "Clear" + edgeName,
+					JTag:  camel("Clear"+edgeName) + ",omitempty",
 					Type:  "*bool",
 					Check: true,
 					Clear: true,
@@ -201,7 +205,7 @@ func (e *extension) parseInputNode(nodes []*gen.Type) []*inputNode {
 		}
 		inputNodes = append(inputNodes, in)
 	}
-	return inputNodes
+	e.TemplateData.InputNodes = inputNodes
 }
 
 func writeFile(f file) {
@@ -253,4 +257,51 @@ func (e *extension) jgraphy(g *gen.Graph) *jgraph {
 	}
 	jg.Nodes = jns
 	return jg
+}
+
+func (e *extension) parseQuery(g *gen.Graph) {
+	qns := []*queryNode{}
+
+	for _, n := range g.Nodes {
+		qn := &queryNode{
+			Name: n.Name,
+		}
+
+		if !vin("errors", e.TemplateData.QueryImports) {
+			e.TemplateData.QueryImports = append(e.TemplateData.QueryImports, "errors")
+		}
+
+		e.TemplateData.QueryImports = append(e.TemplateData.QueryImports,
+			path.Join(e.Config.App.Pkg, "ent", strings.ToLower(n.Name)),
+		)
+
+		for _, f := range n.Fields {
+			qf := &queryField{
+				Name:            f.StructField(),
+				Enum:            f.Type.ConstName() == "TypeEnum",
+				Boolean:         f.Type.ConstName() == "TypeBool",
+				Optional:        f.Optional,
+				TypeString:      f.Type.String(),
+				Comparable:      f.Type.Comparable() && f.Type.ConstName() != "TypeBool",
+				String:          f.Type.ConstName() == "TypeString",
+				EdgeFieldOrEnum: f.IsEdgeField() || f.Type.ConstName() == "TypeEnum",
+			}
+			qf.WithComment = qf.Boolean || qf.Comparable || qf.Optional
+			qn.Fields = append(qn.Fields, qf)
+			if f.Type.ConstName() == "TypeTime" && !vin("time", e.TemplateData.QueryImports) {
+				e.TemplateData.QueryImports = append(e.TemplateData.QueryImports, "time")
+			}
+		}
+
+		for _, e := range n.Edges {
+			qe := &queryEdge{
+				Name: e.Name,
+				Node: e.Type.Name,
+			}
+			qn.Edges = append(qn.Edges, qe)
+		}
+
+		qns = append(qns, qn)
+	}
+	e.TemplateData.QueryNodes = qns
 }

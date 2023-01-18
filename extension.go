@@ -18,9 +18,18 @@ func (e *extension) Hooks() []gen.Hook {
 func (e *extension) debug(next gen.Generator) gen.Generator {
 	return gen.GenerateFunc(func(g *gen.Graph) error {
 		if e.DebugInfo.SchemaJson {
-			b, _ := json.Marshal(e.jgraphy(g))
+			e.TemplateData = &templateData{
+				Config:       e.Config,
+				TypesImports: []string{},
+				InputImports: []string{},
+			}
+
+			e.parseInputNode(g)
+			e.parseQuery(g)
+
+			b, _ := json.Marshal(e.TemplateData)
 			writeFile(file{
-				Path:   path.Join(e.Config.App.RootPath, "graph.json"),
+				Path:   path.Join(e.Config.App.RootPath, "templateData.json"),
 				Buffer: string(b),
 			})
 		}
@@ -31,27 +40,22 @@ func (e *extension) debug(next gen.Generator) gen.Generator {
 func (e *extension) generate(next gen.Generator) gen.Generator {
 	return gen.GenerateFunc(func(g *gen.Graph) error {
 		e.TemplateData = &templateData{
-			Nodes:        g.Nodes,
 			Config:       e.Config,
 			TypesImports: []string{},
 			InputImports: []string{},
 		}
-
-		e.TemplateData.InputNodes = e.parseInputNode(g.Nodes)
+		e.parseInputNode(g)
+		e.parseQuery(g)
 
 		files := []file{
 			{
 				Path:   "ent/enber_input.go",
 				Buffer: parseTemplate("enber/enber_input.go.tmpl", e.TemplateData),
 			},
-			// {
-			// 	Path:   "ent/enber_types.go",
-			// 	Buffer: parseTemplate("enber/enber_types.go.tmpl", e.TemplateData),
-			// },
-			// {
-			// 	Path:   "ent/enber_query.go",
-			// 	Buffer: parseTemplate("enber/enber_query.go.tmpl", e.TemplateData),
-			// },
+			{
+				Path:   "ent/enber_query.go",
+				Buffer: parseTemplate("enber/enber_query.go.tmpl", e.TemplateData),
+			},
 		}
 
 		e.writeFiles(files)

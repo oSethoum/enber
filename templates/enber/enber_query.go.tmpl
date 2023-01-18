@@ -1,5 +1,189 @@
 package ent
+{{$g := .}}
+import (
+	"fmt"
+	{{- range .QueryImports}}
+	"{{$g.Config.App.Pkg}}/ent/predicate"
+	"{{print .}}"
+	{{- end -}}
+)
 
-type {{.Name}}WhereQuery struct {
-  
+{{range .QueryNodes}}
+{{$n := .}}
+type {{pascal .Name}}QueryInput struct {
+	Select []string 										`json:"select"`
+	Offset *int     										`json:"offset"`
+	Limit  *int     										`json:"limit"`
+	Where  *{{pascal .Name}}WhereInput	`json:"{{camel .Name}}WhereInput"`
+	{{- range .Edges}}
+	With{{pascal .Name}} *{{pascal .Node}}QueryInput
+	{{- end}}
 }
+
+type {{pascal .Name}}WhereInput struct {
+	Not 	*{{pascal .Name}}WhereInput 	`json:"not"`
+	Or  	[]*{{pascal .Name}}WhereInput `json:"or"`
+	And 	[]*{{pascal .Name}}WhereInput `json:"and"`
+	{{range .Fields}}
+		{{if .WithComment}}
+		// "{{camel .Name}}" field predicates.
+		{{- end}}
+		{{- if .Boolean}}
+		{{.Name}}EQ  *{{.TypeString}}  `json:"{{camel .Name}}EQ"`
+		{{.Name}}NEQ *{{.TypeString}}  `json:"{{camel .Name}}NEQ"`
+		{{- end}}
+		{{- if .Comparable}}
+		{{pascal .Name}}      *{{.TypeString}}  `json:"{{camel .Name}},omitempty"`
+		{{pascal .Name}}NEQ   *{{.TypeString}}  `json:"{{camel .Name}}NEQ,omitempty"`
+		{{pascal .Name}}In    []{{.TypeString}} `json:"{{camel .Name}}In,omitempty"`
+		{{pascal .Name}}NotIn []{{.TypeString}} `json:"{{camel .Name}}NotIn,omitempty"`
+		{{- if not .EdgeFieldOrEnum}}
+		{{pascal .Name}}GT    *{{.TypeString}}  `json:"{{camel .Name}}GT,omitempty"`
+		{{pascal .Name}}GTE   *{{.TypeString}}  `json:"{{camel .Name}}GTE,omitempty"`
+		{{pascal .Name}}LT    *{{.TypeString}}  `json:"{{camel .Name}}LT,omitempty"`
+		{{pascal .Name}}LTE   *{{.TypeString}}  `json:"{{camel .Name}}LTE,omitempty"`
+		{{- end -}}
+		{{- end}}
+		{{- if .Optional}}
+		{{pascal .Name}}IsNil   *bool  `json:"{{camel .Name}}IsNil,omitempty"`
+		{{pascal .Name}}NotNil   *bool  `json:"{{camel .Name}}NotNil,omitempty"`
+		{{- end}}
+	{{- end}}
+	
+	{{- range .Edges}}
+	Has{{pascal .Name}} 		*bool
+	Has{{pascal .Name}}With *{{.Node}}WhereInput
+	{{- end -}}
+}
+
+var  ErrEmpty{{.Name}}WhereInput = errors.New("ent: empty {{pascal .Name}}WhereInput")
+
+func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
+	var predicates []predicate.{{pascal .Name}}
+
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, {{lower .Name}}.Not(p))
+	}
+
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.{{pascal .Name}}, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, {{lower .Name}}.Or(or...))
+	}
+
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.{{pascal .Name}}, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, {{lower .Name}}.And(and...))
+	}
+
+	{{range .Fields}}
+		{{if .WithComment}}
+		// "{{camel .Name}}" field predicates.
+		{{- end}}
+		{{- if .Boolean}}
+		if v := i.{{pascal .Name}}EQ; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}EQ(*v))
+		}
+		if v := i.{{pascal .Name}}EQ; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}EQ(*v))
+		}
+		{{end}}
+		{{- if .Comparable}}
+		if v := i.{{pascal .Name}}; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}EQ(*v))
+		} 
+		if v := i.{{pascal .Name}}NEQ; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}NEQ(*v))
+		} 
+		if v := i.{{pascal .Name}}In; len(v) > 0 {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}In(v...))
+		} 
+		if v := i.{{pascal .Name}}NotIn; len(v) > 0 {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}NotIn(v...))
+		}
+		{{- if not .EdgeFieldOrEnum}}
+		if v := i.{{pascal .Name}}GT; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}GT(*v))
+		}
+		if v := i.{{pascal .Name}}GTE; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}GTE(*v))
+		}
+		if v := i.{{pascal .Name}}LT; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}LT(*v))
+		}
+		if v := i.{{pascal .Name}}LTE; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}LTE(*v))
+		}
+		{{- end -}}
+		{{end}}
+		{{- if .Optional}}
+		if v := i.{{pascal .Name}}IsNil; v != nil && *v {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}IsNil())
+		}
+		if v := i.{{pascal .Name}}NotNil; v != nil && *v{
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}NotNil())
+		}
+		{{end}}
+	{{end}}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmpty{{pascal .Name}}WhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return {{camel .Name}}.And(predicates...), nil
+	}
+}
+
+func (q *{{pascal .Name}}Query) SetInput(i *{{pascal .Name}}QueryInput) *{{pascal .Name}}Query {
+	if i == nil {
+		return q
+	}
+
+	if i.Where != nil {
+		ps, err := i.Where.P()
+		if err != nil {
+			q = q.Where(ps)
+		}
+	}
+	{{range .Edges}}
+	if v := i.With{{pascal .Name}}; v != nil {
+		q.With{{pascal .Name}}(func(nq *{{pascal .Node}}Query){ nq.SetInput(v) })
+	}
+	{{end}}
+
+	return q
+}
+{{end}}

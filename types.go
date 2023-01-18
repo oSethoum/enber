@@ -5,11 +5,6 @@ import (
 	"entgo.io/ent/entc/gen"
 )
 
-// var filterMap = map[string][]string{
-// 	"string": {},
-// 	"int":    {},
-// }
-
 type (
 	database        uint
 	authentication  string
@@ -61,8 +56,9 @@ type (
 
 	templateData struct {
 		Config       config
-		Nodes        []*gen.Type
 		InputNodes   []*inputNode
+		QueryNodes   []*queryNode
+		QueryImports []string
 		TypesImports []string
 		InputImports []string
 	}
@@ -75,6 +71,29 @@ type (
 		UpdateFields []*inputField
 		CreateEdges  []*inputEdge
 		UpdateEdges  []*inputEdge
+	}
+
+	queryNode struct {
+		Name   string
+		Fields []*queryField
+		Edges  []*queryEdge
+	}
+
+	queryField struct {
+		Name            string
+		TypeString      string
+		Optional        bool
+		Boolean         bool
+		Enum            bool
+		Comparable      bool
+		String          bool
+		WithComment     bool
+		EdgeFieldOrEnum bool
+	}
+
+	queryEdge struct {
+		Name string
+		Node string
 	}
 
 	inputField struct {
