@@ -1,12 +1,12 @@
 package db
 
 import (
-	"{{.Config.Pkg}}/ent"
-	"{{.Config.Pkg}}/ent/migrate"
+	"{{.Config.App.Pkg}}/ent"
+	"{{.Config.App.Pkg}}/ent/migrate"
 	"context"
 	"log"
 
-	"entgo.io/ent/dialect"
+	_ "{{.Config.DriverImport}}"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 )
 
 func Init() {
-	db, err := ent.Open(dialect.SQLite, "db.sqlite?_fk=1")
+	db, err := ent.Open("{{.Config.Driver}}", "{{.Config.Dsn}}")
 	if err != nil {
 		log.Fatalln(err)
 	}

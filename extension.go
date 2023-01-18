@@ -28,9 +28,14 @@ func (e *extension) debug(next gen.Generator) gen.Generator {
 			e.parseQuery(g)
 
 			b, _ := json.Marshal(e.TemplateData)
+			v, _ := json.Marshal(e.jgraphy(g))
 			writeFile(file{
-				Path:   path.Join(e.Config.App.RootPath, "templateData.json"),
+				Path:   path.Join(e.Config.App.RootPath, "_debug/templateData.json"),
 				Buffer: string(b),
+			})
+			writeFile(file{
+				Path:   path.Join(e.Config.App.RootPath, "_debug/graph.json"),
+				Buffer: string(v),
 			})
 		}
 		return next.Generate(g)
@@ -55,6 +60,10 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 			{
 				Path:   "ent/enber_query.go",
 				Buffer: parseTemplate("enber/enber_query.go.tmpl", e.TemplateData),
+			},
+			{
+				Path:   "db/db.go",
+				Buffer: parseTemplate("db/db.go.tmpl", e.TemplateData),
 			},
 		}
 
