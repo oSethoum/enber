@@ -67,7 +67,6 @@ var  ErrEmpty{{.Name}}WhereInput = errors.New("ent: empty {{pascal .Name}}WhereI
 
 func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 	var predicates []predicate.{{pascal .Name}}
-
 	if i.Not != nil {
 		p, err := i.Not.P()
 		if err != nil {
@@ -75,7 +74,6 @@ func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 		}
 		predicates = append(predicates, {{lower .Name}}.Not(p))
 	}
-
 	switch n := len(i.Or); {
 	case n == 1:
 		p, err := i.Or[0].P()
@@ -94,7 +92,6 @@ func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 		}
 		predicates = append(predicates, {{lower .Name}}.Or(or...))
 	}
-
 	switch n := len(i.And); {
 	case n == 1:
 		p, err := i.And[0].P()
@@ -113,9 +110,8 @@ func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 		}
 		predicates = append(predicates, {{lower .Name}}.And(and...))
 	}
-
-	{{range .Fields}}
-		{{if .WithComment}}
+	{{- range .Fields}}
+		{{- if .WithComment}}
 		// "{{camel .Name}}" field predicates.
 		{{- end}}
 		{{- if .Boolean}}
@@ -183,7 +179,18 @@ func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 		}
 		{{- end}}
 	{{end}}
-
+	{{- range .Edges}}
+	// "{{.Name}}" edge predicates.
+	if v := i.Has{{pascal .Name}}; v != nil && *v {
+		predicates = append(predicates, {{lower $n.Name}}.Has{{pascal .Name}}())
+	}
+	if v := i.Has{{pascal .Name}}With; v != nil {
+		p, err := v.P()
+		if err == nil {
+			predicates = append(predicates, {{lower $n.Name}}.Has{{pascal .Name}}With(p))
+		}
+	}
+	{{- end}}
 	switch len(predicates) {
 	case 0:
 		return nil, ErrEmpty{{pascal .Name}}WhereInput
@@ -198,31 +205,26 @@ func (q *{{pascal .Name}}Query) SetInput(i *{{pascal .Name}}QueryInput) *{{pasca
 	if i == nil {
 		return q
 	}
-
 	if i.Where != nil {
 		ps, err := i.Where.P()
 		if err == nil {
 			q.Where(ps)
 		}
 	}
-	{{range .Edges}}
+	{{- range .Edges}}
 	if v := i.With{{pascal .Name}}; v != nil {
 		q.With{{pascal .Name}}(func(nq *{{pascal .Node}}Query){ nq.SetInput(v) })
 	}
-	{{end}}
-
+	{{- end}}
 	if  len(i.Select) > 0 {
 		q.Select(i.Select...)
 	}
-
 	if v := i.Offset; v != nil {
 		q.Offset(*v)
 	}
-
 	if v := i.Limit; v != nil {
 		q.Limit(*v)
-	}
-		
+	}	
 	return q
 }
 {{end}}
