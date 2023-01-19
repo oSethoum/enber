@@ -8,13 +8,18 @@ import (
 	{{- end -}}
 )
 
+type OrderField struct {
+	Field     string `json:"field"`
+	Direction string `json:"direction"`
+}
 {{range .QueryNodes}}
 {{$n := .}}
 type {{pascal .Name}}QueryInput struct {
 	Select []string 										`json:"select"`
 	Offset *int     										`json:"offset"`
 	Limit  *int     										`json:"limit"`
-	Where  *{{pascal .Name}}WhereInput	`json:"{{camel .Name}}WhereInput"`
+	Where  *{{pascal .Name}}WhereInput	`json:"where"`
+	Order  []OrderField    							`json:"order"`
 	{{- range .Edges}}
 	With{{pascal .Name}} *{{pascal .Node}}QueryInput
 	{{- end}}
@@ -56,8 +61,8 @@ type {{pascal .Name}}WhereInput struct {
 		{{pascal .Name}}EqualFold    *string  `json:"{{camel .Name}}EqualsFold,omitempty"`
 		{{- end}}
 	{{- end}}
-	
 	{{- range .Edges}}
+	// "{{.Name}}" edge predicates.
 	Has{{pascal .Name}} 		*bool
 	Has{{pascal .Name}}With *{{.Node}}WhereInput
 	{{- end -}}
@@ -209,6 +214,15 @@ func (q *{{pascal .Name}}Query) SetInput(i *{{pascal .Name}}QueryInput) *{{pasca
 		ps, err := i.Where.P()
 		if err == nil {
 			q.Where(ps)
+		}
+	}
+		if v := i.Order; len(v) > 0 {
+		for _, o := range v {
+			if o.Direction == "Desc" {
+				q.Order(Desc(o.Field))
+			} else {
+				q.Order(Asc(o.Field))
+			}
 		}
 	}
 	{{- range .Edges}}
