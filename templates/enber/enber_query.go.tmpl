@@ -48,6 +48,13 @@ type {{pascal .Name}}WhereInput struct {
 		{{pascal .Name}}IsNil   *bool  `json:"{{camel .Name}}IsNil,omitempty"`
 		{{pascal .Name}}NotNil   *bool  `json:"{{camel .Name}}NotNil,omitempty"`
 		{{- end}}
+		{{- if .String}}
+		{{pascal .Name}}Contains  	 *string  `json:"{{camel .Name}}Contains,omitempty"`
+		{{pascal .Name}}HasPrefix 	 *string  `json:"{{camel .Name}}HasPrefix,omitempty"`
+		{{pascal .Name}}HasSuffix 	 *string  `json:"{{camel .Name}}HasSuffix,omitempty"`
+		{{pascal .Name}}ContainsFold *string  `json:"{{camel .Name}}ContainsFold,omitempty"`
+		{{pascal .Name}}EqualFold    *string  `json:"{{camel .Name}}EqualsFold,omitempty"`
+		{{- end}}
 	{{- end}}
 	
 	{{- range .Edges}}
@@ -155,6 +162,26 @@ func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}NotNil())
 		}
 		{{end}}
+		{{- if .String}}
+		if v := i.{{pascal .Name}}Contains; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}Contains(*v))
+		}
+		if v := i.{{pascal .Name}}HasPrefix; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}HasPrefix(*v))
+		}
+		if v := i.{{pascal .Name}}HasSuffix; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}HasSuffix(*v))
+		}
+		if v := i.{{pascal .Name}}HasSuffix; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}HasSuffix(*v))
+		}
+		if v := i.{{pascal .Name}}ContainsFold; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}ContainsFold(*v))
+		}
+		if v := i.{{pascal .Name}}EqualFold; v != nil {
+			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}EqualFold(*v))
+		}
+		{{- end}}
 	{{end}}
 
 	switch len(predicates) {
@@ -174,8 +201,8 @@ func (q *{{pascal .Name}}Query) SetInput(i *{{pascal .Name}}QueryInput) *{{pasca
 
 	if i.Where != nil {
 		ps, err := i.Where.P()
-		if err != nil {
-			q = q.Where(ps)
+		if err == nil {
+			q.Where(ps)
 		}
 	}
 	{{range .Edges}}
@@ -184,6 +211,18 @@ func (q *{{pascal .Name}}Query) SetInput(i *{{pascal .Name}}QueryInput) *{{pasca
 	}
 	{{end}}
 
+	if  len(i.Select) > 0 {
+		q.Select(i.Select...)
+	}
+
+	if v := i.Offset; v != nil {
+		q.Offset(*v)
+	}
+
+	if v := i.Limit; v != nil {
+		q.Limit(*v)
+	}
+		
 	return q
 }
 {{end}}
