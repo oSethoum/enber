@@ -12,6 +12,7 @@ type OrderField struct {
 	Field     string `json:"field"`
 	Direction string `json:"direction"`
 }
+
 {{range .QueryNodes}}
 {{$n := .}}
 type {{pascal .Name}}QueryInput struct {

@@ -9,7 +9,7 @@ func WithDBConfig(db DatabaseConfig) extensionOption {
 			if db.DBName != "" {
 				e.Config.Dsn = db.DBName + ".sqlite?_fk=1&cahche=shared"
 			} else {
-				e.Config.Dsn = "db.sqlite?_fk=1&cahche=shared"
+				e.Config.Dsn = "db.sqlite?_fk=1&cache=shared"
 			}
 
 		case MySQL:
@@ -40,12 +40,6 @@ func WithDBConfig(db DatabaseConfig) extensionOption {
 
 			e.Config.Dsn = "host=" + host + " port=" + port + " user=" + db.User + " password=" + db.Password + " dbname=" + db.DBName
 		}
-	}
-}
-
-func WithDebug(di DebugInfo) extensionOption {
-	return func(e *extension) {
-		e.DebugInfo = &di
 	}
 }
 

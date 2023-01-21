@@ -14,7 +14,8 @@ import (
 var (
 	snake    = gen.Funcs["snake"].(func(string) string)
 	singular = gen.Funcs["singular"].(func(string) string)
-	camel    = func(s string) string { return gen.Funcs["camel"].(func(string) string)(snake(s)) }
+	_camel   = gen.Funcs["camel"].(func(string) string)
+	camel    = func(s string) string { return _camel(snake(s)) }
 )
 
 func vin[T comparable](v T, a []T) bool {
@@ -31,11 +32,6 @@ func catch(err error) {
 		log.Fatalln(err)
 	}
 }
-
-// func printStruct(v interface{}) {
-// 	b, _ := json.Marshal(v)
-// 	println(string(b))
-// }
 
 func parseTemplate(filename string, data *templateData) string {
 	buffer, err := assets.ReadFile("templates/" + filename)
@@ -84,45 +80,60 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 			createField := &inputField{
 				Name:     fieldName,
 				Type:     fieldType,
+				TsType:   gots[fieldType],
 				Set:      "Set" + fieldName,
 				SetParam: "i." + fieldName,
 			}
 			updateField := &inputField{
 				Name:     fieldName,
 				Type:     "*" + fieldType,
+				TsType:   gots[fieldType],
 				Set:      "Set" + fieldName,
 				SetParam: "*i." + fieldName,
 			}
 
 			if isSlice {
+				createField.Type = "[]" + fieldType
+				createField.TsType = fieldType + "[]"
+
 				updateField.Check = true
+				updateField.TsCheck = true
 				updateField.SetParam = "i." + fieldName
-				updateField.Type = fieldType
+				updateField.Type = "[]" + fieldType
+				updateField.TsType = gots[fieldType] + "[]"
 				if f.Optional {
 					clearField = &inputField{
-						Name:  "Clear" + fieldName,
-						Set:   "Clear" + fieldName,
-						Type:  "*bool",
-						Clear: true,
-						Check: true,
+						Name:    "Clear" + fieldName,
+						Set:     "Clear" + fieldName,
+						Type:    "*bool",
+						TsType:  gots[fieldType],
+						Clear:   true,
+						Check:   true,
+						TsCheck: true,
 					}
 				}
 			} else {
 				if f.Optional {
 					createField.Type = "*" + fieldType
 					createField.Check = true
+					createField.TsCheck = true
 					createField.SetParam = "*i." + fieldName
+					createField.TsType = gots[fieldType]
 
 					updateField.Set = "Set" + fieldName
 					updateField.Type = "*" + fieldType
 					updateField.Check = true
+					updateField.TsCheck = true
+					updateField.TsType = gots[fieldType]
 
 					clearField = &inputField{
-						Name:  "Clear" + fieldName,
-						Set:   "Clear" + fieldName,
-						Type:  "*bool",
-						Check: true,
-						Clear: true,
+						Name:    "Clear" + fieldName,
+						Set:     "Clear" + fieldName,
+						Type:    "*bool",
+						TsType:  gots["bool"],
+						TsCheck: true,
+						Check:   true,
+						Clear:   true,
 					}
 				}
 
@@ -130,9 +141,11 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 					createField.SetParam = "*i." + fieldName
 					createField.Type = "*" + fieldType
 					createField.Check = true
+					createField.TsCheck = true
 
 					updateField.Set = "Set" + fieldName
 					updateField.Check = true
+					updateField.TsCheck = true
 				}
 
 				if f.Type.ConstName() != "TypeJSON" {
@@ -155,6 +168,7 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 					Type:     e.Type.IDType.String(),
 					JTag:     camel(edgeName) + "ID" + ",omitempty",
 					Set:      "Set" + edgeName + "ID",
+					TsType:   gots[e.Type.IDType.String()],
 					SetParam: "i." + edgeName + "ID",
 				}
 				updateEdge := &inputEdge{
@@ -163,7 +177,9 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 					Set:      "Set" + edgeName + "ID",
 					JTag:     camel(edgeName) + "ID" + ",omitempty",
 					SetParam: "*i." + edgeName + "ID",
+					TsType:   gots[e.Type.IDType.String()],
 					Check:    true,
+					TsCheck:  true,
 				}
 				if e.Optional {
 					createEdge.Set = "Set" + edgeName + "ID"
@@ -171,34 +187,43 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 					createEdge.Type = "*" + createEdge.Type
 					createEdge.SetParam = "*i." + edgeName + "ID"
 					createEdge.Check = true
+					createEdge.TsCheck = true
 				}
+
 				in.CreateEdges = append(in.CreateEdges, createEdge)
 				in.UpdateEdges = append(in.UpdateEdges, updateEdge)
 			} else {
 				ea := &inputEdge{
-					Name:  "Add" + singular(edgeName) + "IDs",
-					Set:   "Add" + singular(edgeName) + "IDs",
-					Type:  "[]" + e.Type.IDType.String(),
-					JTag:  camel("Add"+singular(edgeName)) + "IDs" + ",omitempty",
-					Slice: true,
+					Name:    "Add" + singular(edgeName) + "IDs",
+					Set:     "Add" + singular(edgeName) + "IDs",
+					Type:    "[]" + e.Type.IDType.String(),
+					JTag:    camel("Add"+singular(edgeName)) + "IDs" + ",omitempty",
+					TsType:  gots[e.Type.IDType.String()] + "[]",
+					TsCheck: true,
+					Slice:   true,
 				}
 				ea.SetParam = "i." + ea.Name + "..."
 				er := &inputEdge{
-					Name:  "Remove" + singular(edgeName) + "IDs",
-					Set:   "Remove" + singular(edgeName) + "IDs",
-					JTag:  camel("Remove"+singular(edgeName)) + "IDs" + ",omitempty",
-					Type:  "[]" + e.Type.IDType.String(),
-					Slice: true,
+					Name:    "Remove" + singular(edgeName) + "IDs",
+					Set:     "Remove" + singular(edgeName) + "IDs",
+					JTag:    camel("Remove"+singular(edgeName)) + "IDs" + ",omitempty",
+					Type:    "[]" + e.Type.IDType.String(),
+					TsType:  gots[e.Type.IDType.String()] + "[]",
+					TsCheck: true,
+					Slice:   true,
 				}
 				er.SetParam = "i." + er.Name + "..."
 				ec := &inputEdge{
-					Name:  "Clear" + edgeName,
-					Set:   "Clear" + edgeName,
-					JTag:  camel("Clear"+edgeName) + ",omitempty",
-					Type:  "*bool",
-					Check: true,
-					Clear: true,
+					Name:    "Clear" + edgeName,
+					Set:     "Clear" + edgeName,
+					JTag:    camel("Clear"+edgeName) + ",omitempty",
+					Type:    "*bool",
+					TsType:  gots[e.Type.IDType.String()],
+					Check:   true,
+					TsCheck: true,
+					Clear:   true,
 				}
+
 				in.CreateEdges = append(in.CreateEdges, ea)
 				in.UpdateEdges = append(in.UpdateEdges, ea, er, ec)
 			}
@@ -212,51 +237,6 @@ func writeFile(f file) {
 	err := os.MkdirAll(path.Dir(f.Path), 0666)
 	catch(err)
 	os.WriteFile(f.Path, []byte(f.Buffer), 0666)
-}
-
-func (e *extension) jgraphy(g *gen.Graph) *jgraph {
-	jg := &jgraph{}
-	jns := []*jnode{}
-	for _, n := range g.Nodes {
-		jn := &jnode{
-			Name: n.Name,
-		}
-		jfs := []*jfield{}
-		for _, f := range n.Fields {
-			jf := &jfield{
-				Name:          f.Name,
-				StructField:   f.StructField(),
-				Optional:      f.Optional,
-				Nillable:      f.Nillable,
-				Unique:        f.Unique,
-				Default:       f.Default,
-				Enums:         f.Enums,
-				TypePkgName:   f.Type.PkgName,
-				TypePkgPath:   f.Type.PkgPath,
-				Type:          f.Type.String(),
-				TypeConstName: f.Type.ConstName(),
-				TypeIdent:     f.Type.Ident,
-			}
-			jfs = append(jfs, jf)
-		}
-
-		jes := []*jedge{}
-		for _, e := range n.Edges {
-			je := &jedge{
-				Name:     e.Name,
-				Optional: e.Optional,
-				Inverse:  e.Inverse,
-				Unique:   e.Unique,
-			}
-
-			jes = append(jes, je)
-		}
-		jn.Edges = jes
-		jn.Fields = jfs
-		jns = append(jns, jn)
-	}
-	jg.Nodes = jns
-	return jg
 }
 
 func (e *extension) parseQuery(g *gen.Graph) {
@@ -281,6 +261,7 @@ func (e *extension) parseQuery(g *gen.Graph) {
 				Enum:            f.Type.ConstName() == "TypeEnum",
 				Boolean:         f.Type.ConstName() == "TypeBool",
 				Optional:        f.Optional,
+				TsType:          gots[f.Type.String()],
 				TypeString:      f.Type.String(),
 				Comparable:      f.Type.Comparable() && f.Type.ConstName() != "TypeBool",
 				String:          f.Type.ConstName() == "TypeString",
@@ -304,4 +285,9 @@ func (e *extension) parseQuery(g *gen.Graph) {
 		qns = append(qns, qn)
 	}
 	e.TemplateData.QueryNodes = qns
+}
+
+func fixString(s string) string {
+	s = strings.ReplaceAll(s, "\\u0026", "?")
+	return s
 }

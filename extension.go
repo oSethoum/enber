@@ -15,33 +15,6 @@ func (e *extension) Hooks() []gen.Hook {
 	return e.hooks
 }
 
-func (e *extension) debug(next gen.Generator) gen.Generator {
-	return gen.GenerateFunc(func(g *gen.Graph) error {
-		if e.DebugInfo.SchemaJson {
-			e.TemplateData = &templateData{
-				Config:       e.Config,
-				TypesImports: []string{},
-				InputImports: []string{},
-			}
-
-			e.parseInputNode(g)
-			e.parseQuery(g)
-
-			b, _ := json.Marshal(e.TemplateData)
-			v, _ := json.Marshal(e.jgraphy(g))
-			writeFile(file{
-				Path:   path.Join(e.Config.App.RootPath, "_debug/templateData.json"),
-				Buffer: string(b),
-			})
-			writeFile(file{
-				Path:   path.Join(e.Config.App.RootPath, "_debug/graph.json"),
-				Buffer: string(v),
-			})
-		}
-		return next.Generate(g)
-	})
-}
-
 func (e *extension) generate(next gen.Generator) gen.Generator {
 	return gen.GenerateFunc(func(g *gen.Graph) error {
 		e.TemplateData = &templateData{
@@ -62,10 +35,16 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 				Buffer: parseTemplate("enber/enber_query.go.tmpl", e.TemplateData),
 			},
 			{
-				Path:   "db/db.go",
-				Buffer: parseTemplate("db/db.go.tmpl", e.TemplateData),
+				Path:   "ent/enber_typescript.ts",
+				Buffer: parseTemplate("enber/enber_typescript.go.tmpl", e.TemplateData),
 			},
 		}
+
+		b, _ := json.Marshal(e.TemplateData)
+		writeFile(file{
+			Path:   path.Join(e.Config.App.RootPath, "debug.json"),
+			Buffer: fixString(string(b)),
+		})
 
 		e.writeFiles(files)
 		return next.Generate(g)
@@ -92,10 +71,7 @@ func NewExtension(options ...extensionOption) *extension {
 		options[i](ex)
 	}
 	gen.Funcs["snake"] = snake
-	if ex.DebugInfo != nil && ex.DebugInfo.DebugOnly {
-		ex.hooks = append(ex.hooks, ex.debug)
-	} else {
-		ex.hooks = append(ex.hooks, ex.debug, ex.generate)
-	}
+	gen.Funcs["camel"] = camel
+	ex.hooks = append(ex.hooks, ex.generate)
 	return ex
 }

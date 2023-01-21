@@ -1,0 +1,76 @@
+interface OrderField {
+	field?: string;
+	direction?: string;
+}
+
+{{range .InputNodes -}}
+interface {{pascal .Name}}CreateInput {
+{{- range .CreateFields}}
+	{{camel .Name}}{{- if .TsCheck -}}?{{- end -}}: {{.TsType}};
+{{- end}}
+{{- range .CreateEdges}}
+	{{camel .Name}}{{- if .TsCheck -}}?{{- end -}}: {{.TsType}};
+{{- end}}
+}
+
+interface {{pascal .Name}}UpdateInput {
+{{- range .UpdateFields}}
+	{{camel .Name}}{{- if .TsCheck -}}?{{- end -}}: {{.TsType}};
+{{- end}}
+{{- range .UpdateEdges}}
+	{{camel .Name}}{{- if .TsCheck -}}?{{- end -}}: {{.TsType}};
+{{- end}}
+}
+{{end}}
+
+{{range .QueryNodes}}
+interface {{pascal .Name}}QueryInput {
+  select?: string[]
+	offset?: number;
+	limit?: number;
+	where?: {{pascal .Name}}WhereInput;
+	order?: OrderField[];
+	{{- range .Edges}}
+	With{{pascal .Name}}?: {{pascal .Node}}QueryInput;
+	{{- end}}
+}
+
+interface {{pascal .Name}}WhereInput {
+  and?: {{pascal .Name}}WhereInput[];
+  or?: {{pascal .Name}}WhereInput[];
+  not?: {{pascal .Name}}WhereInput;
+  {{- range .Fields}}
+  {{- if .Boolean}}
+	{{camel .Name}}EQ?: {{.TsType}};
+	{{camel .Name}}NEQ?: {{.TsType}};
+	{{- end}}
+	{{- if .Comparable}}
+	{{camel .Name}}?: {{.TsType}};
+	{{camel .Name}}NEQ?: {{.TsType}};
+	{{camel .Name}}In?: {{.TsType}}[];
+	{{camel .Name}}NotIn?: {{.TsType}}[];
+	{{- if not .EdgeFieldOrEnum}}
+	{{camel .Name}}GT?: {{.TsType}};
+	{{camel .Name}}GTE?: {{.TsType}};
+	{{camel .Name}}LT?: {{.TsType}};
+	{{camel .Name}}LTE?: {{.TsType}};
+	{{- end -}}
+	{{- end}}
+	{{- if .Optional}}
+	{{camel .Name}}IsNil?: boolean;
+	{{camel .Name}}NotNil?: boolean;
+	{{- end}}
+	{{- if .String}}
+	{{camel .Name}}Contains?: string;
+	{{camel .Name}}HasPrefix?: string;
+	{{camel .Name}}HasSuffix?: string;
+	{{camel .Name}}ContainsFold?: string;
+	{{camel .Name}}EqualFold?: string;
+	{{- end}}
+  {{- end}}
+  {{- range .Edges}}
+  has{{pascal .Name}}?: boolean;
+	has{{pascal .Name}}With?: {{.Node}}WhereInput;
+  {{- end}}
+}
+{{end}}

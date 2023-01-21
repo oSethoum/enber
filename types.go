@@ -9,16 +9,11 @@ type (
 	database        uint
 	authentication  string
 	extensionOption func(*extension)
-	DebugInfo       struct {
-		SchemaJson bool
-		DebugOnly  bool
-	}
-	extension struct {
+	extension       struct {
 		entc.DefaultExtension
 		hooks        []gen.Hook
 		Config       config
 		TemplateData *templateData
-		DebugInfo    *DebugInfo
 	}
 	config struct {
 		Jwt          bool
@@ -82,6 +77,8 @@ type (
 	queryField struct {
 		Name            string
 		TypeString      string
+		TsType          string
+		DepthType       string
 		Optional        bool
 		Boolean         bool
 		Enum            bool
@@ -99,58 +96,31 @@ type (
 	inputField struct {
 		Name     string
 		Type     string
+		TsType   string
 		Set      string
 		SetParam string
 		Slice    bool
 		Check    bool
+		TsCheck  bool
 		Clear    bool
 	}
 
 	inputEdge struct {
 		Name     string
 		Type     string
+		TsType   string
 		Set      string
 		SetParam string
 		Slice    bool
 		JTag     string
 		Check    bool
+		TsCheck  bool
 		Clear    bool
 	}
 
 	file struct {
 		Path   string
 		Buffer string
-	}
-)
-
-type (
-	jnode struct {
-		Name   string
-		Fields []*jfield
-		Edges  []*jedge
-	}
-	jfield struct {
-		Name          string
-		StructField   string
-		Default       bool
-		Enums         []gen.Enum
-		Unique        bool
-		Nillable      bool
-		Optional      bool
-		Type          string
-		TypePkgPath   string
-		TypePkgName   string
-		TypeConstName string
-		TypeIdent     string
-	}
-	jedge struct {
-		Name     string
-		Optional bool
-		Inverse  string
-		Unique   bool
-	}
-	jgraph struct {
-		Nodes []*jnode
 	}
 )
 
