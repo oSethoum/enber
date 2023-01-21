@@ -1,4 +1,4 @@
-module github/oSethoum/enber
+module github.com/oSethoum/enber
 
 go 1.19
 
