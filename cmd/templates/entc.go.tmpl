@@ -13,8 +13,10 @@ import (
 
 func main() {
 	ex := enber.NewExtension(
-		enber.WithDB(enber.SQLite, "ent"),
-		enber.WithAuth(enber.JWT),
+		enber.WithDBConfig(enber.DatabaseConfig{
+			Driver: enber.SQLite,
+			DBName: "enber",
+		}),
 	)
 
 	options := []entc.Option{

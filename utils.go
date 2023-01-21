@@ -272,6 +272,13 @@ func (e *extension) parseQuery(g *gen.Graph) {
 			if f.Type.ConstName() == "TypeTime" && !vin("time", e.TemplateData.QueryImports) {
 				e.TemplateData.QueryImports = append(e.TemplateData.QueryImports, "time")
 			}
+			var b bool
+			if err := decode(f.Annotations[enberFieldSkip], &b); err != nil {
+				println(err.Error())
+			}
+			if b {
+				println("Annotation worked")
+			}
 		}
 
 		for _, e := range n.Edges {

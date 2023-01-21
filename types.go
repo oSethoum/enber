@@ -82,6 +82,7 @@ type (
 		Optional        bool
 		Boolean         bool
 		Enum            bool
+		Order           bool
 		Comparable      bool
 		String          bool
 		WithComment     bool
