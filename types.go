@@ -16,25 +16,20 @@ type (
 		TemplateData *templateData
 	}
 	config struct {
-		Jwt          bool
-		Swagger      bool
-		Pkg          string
-		Prefix       string
+		DBConfig *DBConfig
+		Server   *ServerConfig
+		tsConfig *TsConfig
+		App      AppConfig
+	}
+
+	TsConfig struct {
+		Path string
+	}
+
+	DBConfig struct {
 		DriverImport string
 		Driver       string
 		Dsn          string
-		Server       ServerConfig
-		App          AppConfig
-		Debug        bool
-	}
-
-	DatabaseConfig struct {
-		Driver   database
-		DBName   string
-		Host     string
-		Port     string
-		User     string
-		Password string
 	}
 
 	AppConfig struct {
@@ -47,6 +42,18 @@ type (
 		FuncName string
 		Port     string
 		Filename string
+		Prefix   string
+		Swagger  bool
+		Jwt      bool
+	}
+
+	DatabaseConfig struct {
+		Driver   database
+		DBName   string
+		Host     string
+		Port     string
+		User     string
+		Password string
 	}
 
 	templateData struct {

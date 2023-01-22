@@ -1,22 +1,46 @@
 package enber
 
-import (
-	"encoding/json"
-
-	"entgo.io/ent/schema"
+type (
+	fieldSkip  uint
+	edgeSkip   float32
+	edgeNested int8
+	nodeSkip   float64
 )
 
-type enberSkip uint
+const (
+	enberFieldSkip = "enber.field.skip"
+
+	FieldSkipCreateInput fieldSkip = iota
+	FieldSkipUpdateInput
+	FieldSkipWhereInput
+	FieldSkipOrder
+)
 
 const (
-	enberFieldSkip            = "enber.field.skip"
-	SkipCreateInput enberSkip = iota
-	SkipUpdateInput
-	SkipWhereInput
+	enberEdgeSkip = "enber.edge.skip"
+
+	EdgeSkipCreateinput edgeSkip = iota * 3.66
+	EdgeSkipUpdateInput
+	EdgeSkipQueryInput
+)
+
+const (
+	enberEdgeNested = "enber.edge.nested"
+
+	EdgeNestedCreate edgeNested = iota * 2
+	EdgeNestedUpdate
+)
+
+const (
+	enberNodeSkip = "enber.node.skip"
+
+	NodeSkipCreate nodeSkip = iota * 2.36
+	NodeSkipUpdate
+	NodeSkipQuery
+	NodeSkipPrivacy
 )
 
 type annotation struct {
-	schema.Annotation
 	name string
 	Data any
 }
@@ -25,27 +49,30 @@ func (a *annotation) Name() string {
 	return a.name
 }
 
-func Skip(skips ...enberSkip) *annotation {
+func FieldSkip(options ...fieldSkip) *annotation {
 	return &annotation{
 		name: enberFieldSkip,
-		Data: true,
+		Data: options,
 	}
 }
 
-func decode(v, out any) error {
-	a := &annotation{}
-	buffer, err := json.Marshal(v)
-	if err != nil {
-		return err
+func EdgeSkip(options ...edgeSkip) *annotation {
+	return &annotation{
+		name: enberEdgeSkip,
+		Data: options,
 	}
-	err = json.Unmarshal(buffer, a)
-	if err != nil {
-		return err
+}
+
+func EdgeNested(options ...edgeNested) *annotation {
+	return &annotation{
+		name: enberEdgeNested,
+		Data: options,
 	}
-	buffer, err = json.Marshal(a.Data)
-	if err != nil {
-		return err
+}
+
+func NodeSkip(options ...nodeSkip) *annotation {
+	return &annotation{
+		name: enberNodeSkip,
+		Data: options,
 	}
-	err = json.Unmarshal(buffer, out)
-	return err
 }

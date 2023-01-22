@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"path"
+	"strings"
 
 	"entgo.io/ent/entc/gen"
 )
@@ -24,7 +25,6 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 		}
 		e.parseInputNode(g)
 		e.parseQuery(g)
-
 		files := []file{
 			{
 				Path:   "ent/enber_input.go",
@@ -34,20 +34,29 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 				Path:   "ent/enber_query.go",
 				Buffer: parseTemplate("enber/enber_query.go.tmpl", e.TemplateData),
 			},
-			{
-				Path:   "ent/enber_typescript.ts",
-				Buffer: parseTemplate("enber/enber_typescript.go.tmpl", e.TemplateData),
-			},
 		}
 
-		b, _ := json.Marshal(e.TemplateData)
-		writeFile(file{
-			Path:   path.Join(e.Config.App.RootPath, "debug.json"),
-			Buffer: fixString(string(b)),
-		})
-
+		if e.Config.tsConfig != nil {
+			if !strings.HasSuffix(e.Config.tsConfig.Path, ".ts") {
+				e.Config.tsConfig.Path += ".ts"
+			}
+			files = append(files,
+				file{
+					Path:   e.Config.tsConfig.Path,
+					Buffer: parseTemplate("enber/enber_typescript.go.tmpl", e.TemplateData),
+				},
+			)
+		}
 		e.writeFiles(files)
 		return next.Generate(g)
+	})
+}
+
+func (e *extension) debug() {
+	b, _ := json.Marshal(e.TemplateData)
+	writeFile(file{
+		Path:   path.Join(e.Config.App.RootPath, "debug.json"),
+		Buffer: fixString(string(b)),
 	})
 }
 
@@ -70,7 +79,7 @@ func NewExtension(options ...extensionOption) *extension {
 	for i := range options {
 		options[i](ex)
 	}
-	gen.Funcs["snake"] = snake
+	ex.debug()
 	gen.Funcs["camel"] = camel
 	ex.hooks = append(ex.hooks, ex.generate)
 	return ex

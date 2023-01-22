@@ -1,12 +1,12 @@
 package db
 
 import (
-	"{{.Config.App.Pkg}}/ent"
-	"{{.Config.App.Pkg}}/ent/migrate"
+	"{{.Config.DBConfig.App.Pkg}}/ent"
+	"{{.Config.DBConfig.App.Pkg}}/ent/migrate"
 	"context"
 	"log"
 
-	_ "{{.Config.DriverImport}}"
+	_ "{{.Config.DBConfig.DriverImport}}"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 )
 
 func Init() {
-	db, err := ent.Open("{{.Config.Driver}}", "{{.Config.Dsn}}")
+	db, err := ent.Open("{{.Config.DBConfig.Driver}}", "{{.Config.DBConfig.Dsn}}")
 	if err != nil {
 		log.Fatalln(err)
 	}

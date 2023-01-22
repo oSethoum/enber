@@ -2,6 +2,7 @@ package enber
 
 import (
 	"bytes"
+	"encoding/json"
 	"log"
 	"os"
 	"path"
@@ -50,11 +51,11 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 		if len(n.Edges)+len(n.Fields) == 0 {
 			continue
 		}
+
 		in := &inputNode{
-			Name:        n.Name,
-			ShouldType:  true,
-			ShouldInput: true,
+			Name: n.Name,
 		}
+
 		in.CreateFields = []*inputField{}
 		in.UpdateFields = []*inputField{}
 		in.CreateEdges = []*inputEdge{}
@@ -268,17 +269,16 @@ func (e *extension) parseQuery(g *gen.Graph) {
 				EdgeFieldOrEnum: f.IsEdgeField() || f.Type.ConstName() == "TypeEnum",
 			}
 			qf.WithComment = qf.Boolean || qf.Comparable || qf.Optional
-			qn.Fields = append(qn.Fields, qf)
 			if f.Type.ConstName() == "TypeTime" && !vin("time", e.TemplateData.QueryImports) {
 				e.TemplateData.QueryImports = append(e.TemplateData.QueryImports, "time")
 			}
-			var b bool
-			if err := decode(f.Annotations[enberFieldSkip], &b); err != nil {
-				println(err.Error())
+
+			skips := []fieldSkip{}
+			if err := decodeAnnotation(f.Annotations[enberFieldSkip], &skips); err != nil {
+				log.Fatalln(err.Error())
 			}
-			if b {
-				println("Annotation worked")
-			}
+			qf.Order = f.Type.Comparable() && !vin(FieldSkipOrder, skips)
+			qn.Fields = append(qn.Fields, qf)
 		}
 
 		for _, e := range n.Edges {
@@ -297,4 +297,22 @@ func (e *extension) parseQuery(g *gen.Graph) {
 func fixString(s string) string {
 	s = strings.ReplaceAll(s, "\\u0026", "?")
 	return s
+}
+
+func decodeAnnotation(v, out any) error {
+	a := &annotation{}
+	buffer, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(buffer, a)
+	if err != nil {
+		return err
+	}
+	buffer, err = json.Marshal(a.Data)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(buffer, out)
+	return err
 }

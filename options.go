@@ -4,17 +4,17 @@ func WithDBConfig(db DatabaseConfig) extensionOption {
 	return func(e *extension) {
 		switch db.Driver {
 		case SQLite:
-			e.Config.Driver = "sqlite3"
-			e.Config.DriverImport = "github.com/mattn/go-sqlite3"
+			e.Config.DBConfig.Driver = "sqlite3"
+			e.Config.DBConfig.DriverImport = "github.com/mattn/go-sqlite3"
 			if db.DBName != "" {
-				e.Config.Dsn = db.DBName + ".sqlite?_fk=1&cahche=shared"
+				e.Config.DBConfig.Dsn = db.DBName + ".sqlite?_fk=1&cahche=shared"
 			} else {
-				e.Config.Dsn = "db.sqlite?_fk=1&cache=shared"
+				e.Config.DBConfig.Dsn = "db.sqlite?_fk=1&cache=shared"
 			}
 
 		case MySQL:
-			e.Config.Driver = "mysql"
-			e.Config.DriverImport = "github.com/go-sql-driver/mysql"
+			e.Config.DBConfig.Driver = "mysql"
+			e.Config.DBConfig.DriverImport = "github.com/go-sql-driver/mysql"
 			host := "127.0.0.1"
 			port := "5432"
 			if db.Host != "" {
@@ -23,11 +23,11 @@ func WithDBConfig(db DatabaseConfig) extensionOption {
 			if db.Port != "" {
 				port = db.Port
 			}
-			e.Config.Dsn = "host=" + host + " port=" + port + " user=" + db.User + " password=" + db.Password + " dbname=" + db.DBName
+			e.Config.DBConfig.Dsn = "host=" + host + " port=" + port + " user=" + db.User + " password=" + db.Password + " dbname=" + db.DBName
 
 		case PostgreSQL:
-			e.Config.Driver = "postgres"
-			e.Config.DriverImport = "github.com/lib/pq"
+			e.Config.DBConfig.Driver = "postgres"
+			e.Config.DBConfig.DriverImport = "github.com/lib/pq"
 			host := "127.0.0.1"
 			port := "5432"
 			if db.Host != "" {
@@ -38,18 +38,18 @@ func WithDBConfig(db DatabaseConfig) extensionOption {
 				port = db.Port
 			}
 
-			e.Config.Dsn = "host=" + host + " port=" + port + " user=" + db.User + " password=" + db.Password + " dbname=" + db.DBName
+			e.Config.DBConfig.Dsn = "host=" + host + " port=" + port + " user=" + db.User + " password=" + db.Password + " dbname=" + db.DBName
 		}
 	}
 }
 
 func WithAuth(method authentication, methods ...authentication) extensionOption {
 	return func(e *extension) {
-		e.Config.Jwt = JWT == method || vin(JWT, methods)
+		e.Config.Server.Jwt = JWT == method || vin(JWT, methods)
 	}
 }
 
-func WithServerConfig(config ServerConfig) extensionOption {
+func WithServerConfig(config *ServerConfig) extensionOption {
 	return func(e *extension) {
 		if config.Pkg == "" {
 			config.Pkg = "main"
@@ -69,13 +69,13 @@ func WithServerConfig(config ServerConfig) extensionOption {
 
 func WithApiPrefix(prefix string) extensionOption {
 	return func(e *extension) {
-		e.Config.Prefix = prefix
+		e.Config.Server.Prefix = prefix
 	}
 }
 
 func WithSwagger(b bool) extensionOption {
 	return func(e *extension) {
-		e.Config.Swagger = b
+		e.Config.Server.Swagger = b
 	}
 }
 
@@ -86,6 +86,14 @@ func WithAppConfig(c AppConfig) extensionOption {
 		}
 		if c.RootPath != "" {
 			e.Config.App.RootPath = c.RootPath
+		}
+	}
+}
+
+func WithTypeScript(path string) extensionOption {
+	return func(e *extension) {
+		e.Config.tsConfig = &TsConfig{
+			Path: path,
 		}
 	}
 }
