@@ -1,0 +1,24 @@
+package handlers
+
+type ErrorCode = uint
+
+const (
+	ErrorParsingID = iota + 1
+	ErrorParsingQuery
+	ErrorParsingBody
+	ErrorCreatingEntity
+	ErrorUpdatingEntity
+	ErrorDeletingEntity
+	ErrorEntityNotFound
+	ErrorUniqueInputs
+)
+
+type Error struct {
+	Code    ErrorCode `json:"code,omitempty"`
+	Message any       `json:"message,omitempty"`
+}
+
+type Response struct {
+	Data  any    `json:"data,omitempty"`
+	Error *Error `json:"error,omitempty"`
+}

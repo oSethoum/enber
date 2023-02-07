@@ -18,7 +18,7 @@ type (
 	config struct {
 		DBConfig *DBConfig
 		Server   *ServerConfig
-		tsConfig *TsConfig
+		TsConfig *TsConfig
 		App      AppConfig
 	}
 
@@ -30,6 +30,7 @@ type (
 		DriverImport string
 		Driver       string
 		Dsn          string
+		UniqueID     bool
 	}
 
 	AppConfig struct {
@@ -49,6 +50,7 @@ type (
 
 	DatabaseConfig struct {
 		Driver   database
+		UniqueID bool
 		DBName   string
 		Host     string
 		Port     string
@@ -58,6 +60,8 @@ type (
 
 	templateData struct {
 		Config       config
+		InputNode    *inputNode
+		QueryNode    *queryNode
 		InputNodes   []*inputNode
 		QueryNodes   []*queryNode
 		QueryImports []string

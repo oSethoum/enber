@@ -1,8 +1,8 @@
 package db
 
 import (
-	"{{.Config.DBConfig.App.Pkg}}/ent"
-	"{{.Config.DBConfig.App.Pkg}}/ent/migrate"
+	"{{.Config.App.Pkg}}/ent"
+	"{{.Config.App.Pkg}}/ent/migrate"
 	"context"
 	"log"
 
@@ -22,7 +22,9 @@ func Init() {
 	db.Schema.Create(context.Background(),
 		migrate.WithDropColumn(true),
 		migrate.WithDropIndex(true),
+		{{- if .Config.DBConfig.UniqueID}}
 		migrate.WithGlobalUniqueID(true),
+		{{- end}}
 		migrate.WithForeignKeys(true),
 	)
 

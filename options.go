@@ -2,6 +2,7 @@ package enber
 
 func WithDBConfig(db DatabaseConfig) extensionOption {
 	return func(e *extension) {
+		e.Config.DBConfig = &DBConfig{}
 		switch db.Driver {
 		case SQLite:
 			e.Config.DBConfig.Driver = "sqlite3"
@@ -92,8 +93,14 @@ func WithAppConfig(c AppConfig) extensionOption {
 
 func WithTypeScript(path string) extensionOption {
 	return func(e *extension) {
-		e.Config.tsConfig = &TsConfig{
+		e.Config.TsConfig = &TsConfig{
 			Path: path,
 		}
+	}
+}
+
+func WithPrivacy(b bool) extensionOption {
+	return func(e *extension) {
+
 	}
 }

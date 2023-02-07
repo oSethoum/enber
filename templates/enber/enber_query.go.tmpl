@@ -2,10 +2,11 @@ package ent
 {{$g := .}}
 import (
 	"fmt"
-	{{- range .QueryImports}}
+	"strings"
 	"{{$g.Config.App.Pkg}}/ent/predicate"
+	{{- range .QueryImports}}
 	"{{print .}}"
-	{{- end -}}
+	{{- end}}
 )
 
 type OrderField struct {
@@ -22,7 +23,7 @@ type {{pascal .Name}}QueryInput struct {
 	Where  *{{pascal .Name}}WhereInput	`json:"where"`
 	Order  []OrderField    							`json:"order"`
 	{{- range .Edges}}
-	With{{pascal .Name}} *{{pascal .Node}}QueryInput
+	With{{pascal .Name}} *{{pascal .Node}}QueryInput `json:"with{{pascal .Name}},omitempty"`
 	{{- end}}
 }
 
@@ -64,8 +65,8 @@ type {{pascal .Name}}WhereInput struct {
 	{{- end}}
 	{{- range .Edges}}
 	// "{{.Name}}" edge predicates.
-	Has{{pascal .Name}} 		*bool
-	Has{{pascal .Name}}With *{{.Node}}WhereInput
+	Has{{pascal .Name}} 		*bool		`json:"has{{pascal .Name}}},omitempty"`
+	Has{{pascal .Name}}With *{{.Node}}WhereInput `json:"has{{pascal .Name}}With,omitempty"`
 	{{- end -}}
 }
 
@@ -219,7 +220,7 @@ func (q *{{pascal .Name}}Query) SetInput(i *{{pascal .Name}}QueryInput) *{{pasca
 	}
 		if v := i.Order; len(v) > 0 {
 		for _, o := range v {
-			if o.Direction == "Desc" {
+			if strings.ToUpper(o.Direction) == "DESC" {
 				q.Order(Desc(o.Field))
 			} else {
 				q.Order(Asc(o.Field))

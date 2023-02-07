@@ -34,19 +34,25 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 				Path:   "ent/enber_query.go",
 				Buffer: parseTemplate("enber/enber_query.go.tmpl", e.TemplateData),
 			},
+			{
+				Path:   "db/db.go",
+				Buffer: parseTemplate("db/db.go.tmpl", e.TemplateData),
+			},
 		}
 
-		if e.Config.tsConfig != nil {
-			if !strings.HasSuffix(e.Config.tsConfig.Path, ".ts") {
-				e.Config.tsConfig.Path += ".ts"
+		if e.Config.TsConfig != nil {
+			if !strings.HasSuffix(e.Config.TsConfig.Path, ".ts") {
+				e.Config.TsConfig.Path += ".ts"
 			}
 			files = append(files,
 				file{
-					Path:   e.Config.tsConfig.Path,
+					Path:   e.Config.TsConfig.Path,
 					Buffer: parseTemplate("enber/enber_typescript.go.tmpl", e.TemplateData),
 				},
 			)
 		}
+
+		e.debug()
 		e.writeFiles(files)
 		return next.Generate(g)
 	})
@@ -79,8 +85,9 @@ func NewExtension(options ...extensionOption) *extension {
 	for i := range options {
 		options[i](ex)
 	}
-	ex.debug()
 	gen.Funcs["camel"] = camel
+	gen.Funcs["enberorder"] = enberorder
+	gen.Funcs["enberselect"] = enberselect
 	ex.hooks = append(ex.hooks, ex.generate)
 	return ex
 }

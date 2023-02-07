@@ -1,23 +1,161 @@
 package handlers
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"{{.Config.App.Pkg}}/db"
+	"{{.Config.App.Pkg}}/ent"
+	"encoding/json"
 
-func Query{{.Node.Name}}(c *fiber.Ctx) error {
-	return nil
+	"github.com/gofiber/fiber/v2"
+)
+
+func Find{{pascal .QueryNode.Name}}(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorParsingID,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	data, err := db.Client.{{pascal .QueryNode.Name}}.Get(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(Response{
+			Error: &Error{
+				Code:    ErrorEntityNotFound,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(Response{
+		Data: data,
+	})
 }
 
-func Find{{.Node.Name}}(c *fiber.Ctx) error {
-	return nil
+func Query{{pascal .QueryNode.Name}}(c *fiber.Ctx) error {
+	query := new(ent.{{pascal .QueryNode.Name}}QueryInput)
+	q := c.Query("query")
+	err := json.Unmarshal([]byte(q), query)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorParsingQuery,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	data, err := db.Client.{{pascal .QueryNode.Name}}.Query().SetInput(query).All(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorEntityNotFound,
+				Message: err.Error(),
+			},
+		})
+	}
+	return c.JSON(Response{
+		Data: data,
+	})
 }
 
-func Create{{.Node.Name}}(c *fiber.Ctx) error {
-	return nil
+func Create{{pascal .InputNode.Name}}(c *fiber.Ctx) error {
+	body := new(ent.{{pascal .InputNode.Name}}CreateInput)
+	err := c.BodyParser(body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorParsingBody,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	data, err := db.Client.{{pascal .InputNode.Name}}.Create().SetInput(body).Save(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorCreatingEntity,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(Response{
+		Data: data,
+	})
 }
 
-func Update{{.Node.Name}}(c *fiber.Ctx) error {
-	return nil
+func Update{{pascal .InputNode.Name}}(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorParsingID,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	body := new(ent.{{pascal .InputNode.Name}}UpdateInput)
+	err = c.BodyParser(body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorParsingBody,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	data, err := db.Client.{{pascal .InputNode.Name}}.UpdateOneID(id).SetInput(body).Save(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorUpdatingEntity,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(Response{
+		Data: data,
+	})
 }
 
-func Delete{{.Node.Name}}(c *fiber.Ctx) error {
-	return nil
+func Delete{{pascal .InputNode.Name}}(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorParsingID,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	data, err := db.Client.{{pascal .InputNode.Name}}.Get(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorEntityNotFound,
+				Message: err.Error(),
+			},
+		})
+	}
+
+	err = db.Client.{{pascal .InputNode.Name}}.DeleteOneID(id).Exec(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Error: &Error{
+				Code:    ErrorDeletingEntity,
+				Message: err.Error(),
+			},
+		})
+	}
+	return c.JSON(Response{
+		Data: data,
+	})
 }

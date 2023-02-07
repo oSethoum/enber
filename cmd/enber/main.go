@@ -26,6 +26,7 @@ func main() {
 		Path:   "ent/generate/generate.go",
 		Buffer: parseTemplate("generate.go.tmpl", nil),
 	})
+	os.Mkdir("ent/schema", 0666)
 }
 
 func parseTemplate(filename string, data interface{}) string {

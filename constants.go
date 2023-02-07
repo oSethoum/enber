@@ -1,7 +1,7 @@
 package enber
 
 var gots = map[string]string{
-	"bool":      "Boolean",
+	"bool":      "boolean",
 	"string":    "string",
 	"int":       "number",
 	"int8":      "number",

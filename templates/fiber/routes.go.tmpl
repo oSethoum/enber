@@ -7,12 +7,12 @@ import (
 )
 
 func Init(app *fiber.App) {
-	{{- range .Nodes}}
+	{{- range .QueryNodes}}
 		{{camel .Name}} := app.Group("/{{.Name}}")
 		{{camel .Name}}.Get("/", handlers.Query{{.Name}})
-		{{camel .Name}}.Get("/:id", handlers.Get{{.Name}})
-		{{camel .Name}}.Post("/", handlers.Post{{.Name}})
-		{{camel .Name}}.Patch("/", handlers.Patch{{.Name}})
+		{{camel .Name}}.Get("/:id", handlers.Find{{.Name}})
+		{{camel .Name}}.Post("/", handlers.Create{{.Name}})
+		{{camel .Name}}.Patch("/", handlers.Update{{.Name}})
 		{{camel .Name}}.Delete("/", handlers.Delete{{.Name}})
   {{end}}
 }

@@ -61,7 +61,13 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 		in.CreateEdges = []*inputEdge{}
 		in.UpdateEdges = []*inputEdge{}
 
-		for _, f := range n.Fields {
+		fields := n.Fields
+		if n.ID.UserDefined {
+			fields = append([]*gen.Field{n.ID}, fields...)
+		}
+
+		for _, f := range fields {
+			println("field", f.Name)
 			if f.IsEdgeField() {
 				continue
 			}
@@ -248,6 +254,8 @@ func (e *extension) parseQuery(g *gen.Graph) {
 			Name: n.Name,
 		}
 
+		fields := append([]*gen.Field{n.ID}, n.Fields...)
+
 		if !vin("errors", e.TemplateData.QueryImports) {
 			e.TemplateData.QueryImports = append(e.TemplateData.QueryImports, "errors")
 		}
@@ -256,7 +264,10 @@ func (e *extension) parseQuery(g *gen.Graph) {
 			path.Join(e.Config.App.Pkg, "ent", strings.ToLower(n.Name)),
 		)
 
-		for _, f := range n.Fields {
+		for _, f := range fields {
+			if f.Sensitive() {
+				continue
+			}
 			qf := &queryField{
 				Name:            f.StructField(),
 				Enum:            f.Type.ConstName() == "TypeEnum",
@@ -299,6 +310,23 @@ func fixString(s string) string {
 	return s
 }
 
+func enberorder(n queryNode) string {
+	fields := []string{}
+	for _, f := range n.Fields {
+		if f.Order {
+			fields = append(fields, "\""+snake(f.Name)+"\"")
+		}
+	}
+	return strings.Join(fields, " | ")
+}
+func enberselect(n queryNode) string {
+	fields := []string{}
+	for _, f := range n.Fields {
+		fields = append(fields, "\""+snake(f.Name)+"\"")
+	}
+	return strings.Join(fields, " | ")
+}
+
 func decodeAnnotation(v, out any) error {
 	a := &annotation{}
 	buffer, err := json.Marshal(v)
@@ -315,4 +343,32 @@ func decodeAnnotation(v, out any) error {
 	}
 	err = json.Unmarshal(buffer, out)
 	return err
+}
+
+func hasId(n *gen.Type) bool {
+	for _, f := range n.Fields {
+		if strings.ToLower(f.Name) == "id" {
+			return true
+		}
+	}
+	return false
+}
+
+func findGoMode() (string, string, bool) {
+	pMod := ""
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", "", false
+	}
+	found := false
+	for !found {
+		pMod = path.Join(dir, "go.mod")
+		_, err := os.Stat(pMod)
+		if err != nil {
+			dir = path.Join(dir, "..")
+		} else {
+			found = true
+		}
+	}
+	return dir, pMod, true
 }
