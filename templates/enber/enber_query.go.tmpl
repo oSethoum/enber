@@ -65,7 +65,7 @@ type {{pascal .Name}}WhereInput struct {
 	{{- end}}
 	{{- range .Edges}}
 	// "{{.Name}}" edge predicates.
-	Has{{pascal .Name}} 		*bool		`json:"has{{pascal .Name}}},omitempty"`
+	Has{{pascal .Name}} 		*bool		`json:"has{{pascal .Name}},omitempty"`
 	Has{{pascal .Name}}With *{{.Node}}WhereInput `json:"has{{pascal .Name}}With,omitempty"`
 	{{- end -}}
 }

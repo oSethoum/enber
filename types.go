@@ -20,6 +20,8 @@ type (
 		Server   *ServerConfig
 		TsConfig *TsConfig
 		App      AppConfig
+		Privacy  bool
+		Debug    bool
 	}
 
 	TsConfig struct {

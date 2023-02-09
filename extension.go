@@ -34,10 +34,30 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 				Path:   "ent/enber_query.go",
 				Buffer: parseTemplate("enber/enber_query.go.tmpl", e.TemplateData),
 			},
-			{
+		}
+
+		if e.Config.DBConfig != nil {
+			files = append(files, file{
 				Path:   "db/db.go",
 				Buffer: parseTemplate("db/db.go.tmpl", e.TemplateData),
-			},
+			})
+		}
+
+		if e.Config.Server != nil {
+			files = append(files, file{
+
+				Path:   "handlers/enber.go",
+				Buffer: parseTemplate("enber/enber_handler.go.tmpl", e.TemplateData),
+			})
+			for i, n := range g.Nodes {
+				e.TemplateData.InputNode = e.TemplateData.InputNodes[i]
+				e.TemplateData.QueryNode = e.TemplateData.QueryNodes[i]
+
+				files = append(files, file{
+					Path:   "handlers/" + snake(n.Name) + ".go",
+					Buffer: parseTemplate("fiber/handlers.go.tmpl", e.TemplateData),
+				})
+			}
 		}
 
 		if e.Config.TsConfig != nil {
@@ -51,8 +71,9 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 				},
 			)
 		}
-
-		e.debug()
+		if e.Config.Debug {
+			e.debug()
+		}
 		e.writeFiles(files)
 		return next.Generate(g)
 	})

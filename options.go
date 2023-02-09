@@ -8,7 +8,7 @@ func WithDBConfig(db DatabaseConfig) extensionOption {
 			e.Config.DBConfig.Driver = "sqlite3"
 			e.Config.DBConfig.DriverImport = "github.com/mattn/go-sqlite3"
 			if db.DBName != "" {
-				e.Config.DBConfig.Dsn = db.DBName + ".sqlite?_fk=1&cahche=shared"
+				e.Config.DBConfig.Dsn = db.DBName + ".sqlite?_fk=1&cache=shared"
 			} else {
 				e.Config.DBConfig.Dsn = "db.sqlite?_fk=1&cache=shared"
 			}
@@ -101,6 +101,12 @@ func WithTypeScript(path string) extensionOption {
 
 func WithPrivacy(b bool) extensionOption {
 	return func(e *extension) {
+		e.Config.Privacy = b
+	}
+}
 
+func WithDebug(b bool) extensionOption {
+	return func(e *extension) {
+		e.Config.Debug = b
 	}
 }

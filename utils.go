@@ -67,7 +67,6 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 		}
 
 		for _, f := range fields {
-			println("field", f.Name)
 			if f.IsEdgeField() {
 				continue
 			}
@@ -345,30 +344,30 @@ func decodeAnnotation(v, out any) error {
 	return err
 }
 
-func hasId(n *gen.Type) bool {
-	for _, f := range n.Fields {
-		if strings.ToLower(f.Name) == "id" {
-			return true
-		}
-	}
-	return false
-}
+// func _hasId(n *gen.Type) bool {
+// 	for _, f := range n.Fields {
+// 		if strings.ToLower(f.Name) == "id" {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
-func findGoMode() (string, string, bool) {
-	pMod := ""
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", "", false
-	}
-	found := false
-	for !found {
-		pMod = path.Join(dir, "go.mod")
-		_, err := os.Stat(pMod)
-		if err != nil {
-			dir = path.Join(dir, "..")
-		} else {
-			found = true
-		}
-	}
-	return dir, pMod, true
-}
+// func _findGoMode() (string, string, bool) {
+// 	pMod := ""
+// 	dir, err := os.Getwd()
+// 	if err != nil {
+// 		return "", "", false
+// 	}
+// 	found := false
+// 	for !found {
+// 		pMod = path.Join(dir, "go.mod")
+// 		_, err := os.Stat(pMod)
+// 		if err != nil {
+// 			dir = path.Join(dir, "..")
+// 		} else {
+// 			found = true
+// 		}
+// 	}
+// 	return dir, pMod, true
+// }
