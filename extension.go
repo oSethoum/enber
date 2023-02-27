@@ -45,7 +45,6 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 
 		if e.Config.Server != nil {
 			files = append(files, file{
-
 				Path:   "handlers/enber.go",
 				Buffer: parseTemplate("enber/enber_handler.go.tmpl", e.TemplateData),
 			})

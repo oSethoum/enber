@@ -9,153 +9,90 @@ import (
 )
 
 func Find{{pascal .QueryNode.Name}}(c *fiber.Ctx) error {
+	{{- if eq .QueryNode.IDType "int"}}
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorParsingID,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
+	{{- end}}
+	{{- if eq .QueryNode.IDType "string"}}
+	id := c.Params("id")
+	{{- end}}
 	data, err := db.Client.{{pascal .QueryNode.Name}}.Get(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(Response{
-			Error: &Error{
-				Code:    ErrorEntityNotFound,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
 	}
-
-	return c.Status(fiber.StatusOK).JSON(Response{
-		Data: data,
-	})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": data})
 }
 
 func Query{{pascal .QueryNode.Name}}(c *fiber.Ctx) error {
 	query := new(ent.{{pascal .QueryNode.Name}}QueryInput)
 	q := c.Query("query")
-	err := json.Unmarshal([]byte(q), query)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorParsingQuery,
-				Message: err.Error(),
-			},
-		})
+	if q != "" {
+		err := json.Unmarshal([]byte(q), query)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
 	}
-
 	data, err := db.Client.{{pascal .QueryNode.Name}}.Query().SetInput(query).All(c.Context())
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorEntityNotFound,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.JSON(Response{
-		Data: data,
-	})
+	return c.JSON(fiber.Map{"data": data})
 }
 
 func Create{{pascal .InputNode.Name}}(c *fiber.Ctx) error {
 	body := new(ent.{{pascal .InputNode.Name}}CreateInput)
 	err := c.BodyParser(body)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorParsingBody,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
 	data, err := db.Client.{{pascal .InputNode.Name}}.Create().SetInput(body).Save(c.Context())
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorCreatingEntity,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
-	return c.Status(fiber.StatusCreated).JSON(Response{
-		Data: data,
-	})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"data": data})
 }
 
 func Update{{pascal .InputNode.Name}}(c *fiber.Ctx) error {
+	{{- if eq .InputNode.IDType "int"}}
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorParsingID,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
+	{{- end}}
+	{{- if eq .InputNode.IDType "string"}}
+	id := c.Params("id")
+	{{- end}}
 	body := new(ent.{{pascal .InputNode.Name}}UpdateInput)
 	err = c.BodyParser(body)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorParsingBody,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
 	data, err := db.Client.{{pascal .InputNode.Name}}.UpdateOneID(id).SetInput(body).Save(c.Context())
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorUpdatingEntity,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
-	return c.Status(fiber.StatusOK).JSON(Response{
-		Data: data,
-	})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": data})
 }
 
 func Delete{{pascal .InputNode.Name}}(c *fiber.Ctx) error {
+	{{- if eq .InputNode.IDType "int"}}
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorParsingID,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
+	{{- end}}
+	{{- if eq .InputNode.IDType "string"}}
+	id := c.Params("id")
+	{{- end}}
 	data, err := db.Client.{{pascal .InputNode.Name}}.Get(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorEntityNotFound,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-
 	err = db.Client.{{pascal .InputNode.Name}}.DeleteOneID(id).Exec(c.Context())
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Response{
-			Error: &Error{
-				Code:    ErrorDeletingEntity,
-				Message: err.Error(),
-			},
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.JSON(Response{
-		Data: data,
-	})
+	return c.JSON(fiber.Map{"data": data})
 }

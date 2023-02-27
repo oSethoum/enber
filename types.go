@@ -73,6 +73,7 @@ type (
 
 	inputNode struct {
 		Name         string
+		IDType       string
 		ShouldType   bool
 		ShouldInput  bool
 		CreateFields []*inputField
@@ -83,6 +84,7 @@ type (
 
 	queryNode struct {
 		Name   string
+		IDType string
 		Fields []*queryField
 		Edges  []*queryEdge
 	}

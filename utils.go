@@ -62,6 +62,8 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 		in.UpdateEdges = []*inputEdge{}
 
 		fields := n.Fields
+		in.IDType = n.IDType.String()
+
 		if n.ID.UserDefined {
 			fields = append([]*gen.Field{n.ID}, fields...)
 		}
@@ -99,14 +101,14 @@ func (e *extension) parseInputNode(g *gen.Graph) {
 			}
 
 			if isSlice {
-				createField.Type = "[]" + fieldType
-				createField.TsType = fieldType + "[]"
+				createField.Type = fieldType
+				createField.TsType = gots[fieldType]
 
 				updateField.Check = true
 				updateField.TsCheck = true
 				updateField.SetParam = "i." + fieldName
-				updateField.Type = "[]" + fieldType
-				updateField.TsType = gots[fieldType] + "[]"
+				updateField.Type = fieldType
+				updateField.TsType = gots[fieldType]
 				if f.Optional {
 					clearField = &inputField{
 						Name:    "Clear" + fieldName,
@@ -252,7 +254,7 @@ func (e *extension) parseQuery(g *gen.Graph) {
 		qn := &queryNode{
 			Name: n.Name,
 		}
-
+		qn.IDType = n.IDType.String()
 		fields := append([]*gen.Field{n.ID}, n.Fields...)
 
 		if !vin("errors", e.TemplateData.QueryImports) {

@@ -19,7 +19,7 @@ func Init() {
 		log.Fatalln(err)
 	}
 
-	db.Schema.Create(context.Background(),
+	err = db.Schema.Create(context.Background(),
 		migrate.WithDropColumn(true),
 		migrate.WithDropIndex(true),
 		{{- if .Config.DBConfig.UniqueID}}
@@ -27,6 +27,10 @@ func Init() {
 		{{- end}}
 		migrate.WithForeignKeys(true),
 	)
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 
 	Client = db
 }

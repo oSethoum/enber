@@ -64,13 +64,10 @@ func WithServerConfig(config *ServerConfig) extensionOption {
 		if config.Filename == "" {
 			config.Filename = "main"
 		}
+		if config.Prefix == "" {
+			config.Prefix = "api"
+		}
 		e.Config.Server = config
-	}
-}
-
-func WithApiPrefix(prefix string) extensionOption {
-	return func(e *extension) {
-		e.Config.Server.Prefix = prefix
 	}
 }
 

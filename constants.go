@@ -15,4 +15,5 @@ var gots = map[string]string{
 	"float32":   "number",
 	"float64":   "number",
 	"time.Time": "string",
+	"[]string":  "string[]",
 }

@@ -77,12 +77,14 @@ export interface {{pascal .Name}}WhereInput {
 	{{camel .Name}}IsNil?: boolean;
 	{{camel .Name}}NotNil?: boolean;
 	{{- end}}
-	{{- if .String}}
-	{{camel .Name}}Contains?: string;
-	{{camel .Name}}HasPrefix?: string;
-	{{camel .Name}}HasSuffix?: string;
-	{{camel .Name}}ContainsFold?: string;
-	{{camel .Name}}EqualFold?: string;
+	{{- if eq .Name "ID" | not}}
+		{{- if .String}}
+		{{camel .Name}}Contains?: string;
+		{{camel .Name}}HasPrefix?: string;
+		{{camel .Name}}HasSuffix?: string;
+		{{camel .Name}}ContainsFold?: string;
+		{{camel .Name}}EqualFold?: string;
+		{{- end}}
 	{{- end}}
   {{- end}}
   {{- range .Edges}}

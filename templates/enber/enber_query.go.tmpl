@@ -55,12 +55,14 @@ type {{pascal .Name}}WhereInput struct {
 		{{pascal .Name}}IsNil   *bool  `json:"{{camel .Name}}IsNil,omitempty"`
 		{{pascal .Name}}NotNil   *bool  `json:"{{camel .Name}}NotNil,omitempty"`
 		{{- end}}
-		{{- if .String}}
-		{{pascal .Name}}Contains  	 *string  `json:"{{camel .Name}}Contains,omitempty"`
-		{{pascal .Name}}HasPrefix 	 *string  `json:"{{camel .Name}}HasPrefix,omitempty"`
-		{{pascal .Name}}HasSuffix 	 *string  `json:"{{camel .Name}}HasSuffix,omitempty"`
-		{{pascal .Name}}ContainsFold *string  `json:"{{camel .Name}}ContainsFold,omitempty"`
-		{{pascal .Name}}EqualFold    *string  `json:"{{camel .Name}}EqualsFold,omitempty"`
+		{{- if eq .Name "ID" | not}}
+			{{- if .String}}
+			{{pascal .Name}}Contains  	 *string  `json:"{{camel .Name}}Contains,omitempty"`
+			{{pascal .Name}}HasPrefix 	 *string  `json:"{{camel .Name}}HasPrefix,omitempty"`
+			{{pascal .Name}}HasSuffix 	 *string  `json:"{{camel .Name}}HasSuffix,omitempty"`
+			{{pascal .Name}}ContainsFold *string  `json:"{{camel .Name}}ContainsFold,omitempty"`
+			{{pascal .Name}}EqualFold    *string  `json:"{{camel .Name}}EqualsFold,omitempty"`
+			{{- end}}
 		{{- end}}
 	{{- end}}
 	{{- range .Edges}}
@@ -165,6 +167,7 @@ func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}NotNil())
 		}
 		{{end}}
+		{{- if eq .Name "ID" | not}}
 		{{- if .String}}
 		if v := i.{{pascal .Name}}Contains; v != nil {
 			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}Contains(*v))
@@ -184,6 +187,7 @@ func (i *{{pascal .Name}}WhereInput) P() (predicate.{{pascal .Name}}, error) {
 		if v := i.{{pascal .Name}}EqualFold; v != nil {
 			predicates = append(predicates, {{lower $n.Name}}.{{pascal .Name}}EqualFold(*v))
 		}
+		{{- end}}
 		{{- end}}
 	{{end}}
 	{{- range .Edges}}
