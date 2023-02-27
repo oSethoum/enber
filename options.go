@@ -61,8 +61,8 @@ func WithServerConfig(config *ServerConfig) extensionOption {
 		if config.Port == "" {
 			config.Port = "5000"
 		}
-		if config.Filename == "" {
-			config.Filename = "main"
+		if config.FileName == "" {
+			config.FileName = "main"
 		}
 		if config.Prefix == "" {
 			config.Prefix = "api"

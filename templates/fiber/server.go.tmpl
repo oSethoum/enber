@@ -1,4 +1,4 @@
-package main
+package {{.Config.Server.Pkg}}
 
 import (
 	"{{.Config.App.Pkg}}/db"
@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func main() {
+func {{.Config.Server.FuncName}}() {
 	db.Init()
 	defer db.Client.Close()
 	app := fiber.New()
-	routes.Init(e)
+	routes.Init(app)
 	app.Listen(":{{.Config.Server.Port}}")
 }

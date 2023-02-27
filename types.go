@@ -44,7 +44,7 @@ type (
 		Pkg      string
 		FuncName string
 		Port     string
-		Filename string
+		FileName string
 		Prefix   string
 		Swagger  bool
 		Jwt      bool

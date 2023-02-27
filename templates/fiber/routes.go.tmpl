@@ -1,18 +1,19 @@
 package routes
 
 import (
-	"app/handlers"
+	"{{.Config.App.Pkg}}/handlers"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func Init(app *fiber.App) {
-	{{- range .QueryNodes}}
-		{{camel .Name}} := app.Group("/{{.Name}}")
-		{{camel .Name}}.Get("/", handlers.Query{{.Name}})
-		{{camel .Name}}.Get("/:id", handlers.Find{{.Name}})
-		{{camel .Name}}.Post("/", handlers.Create{{.Name}})
-		{{camel .Name}}.Patch("/", handlers.Update{{.Name}})
-		{{camel .Name}}.Delete("/", handlers.Delete{{.Name}})
-  {{end}}
+func Init(app fiber.Router) {
+	app = app.Group("/{{.Config.Server.Prefix}}")
+	{{range .QueryNodes}}
+	{{camel .Name}} := app.Group("/{{camel .Name | plural}}")
+	{{camel .Name}}.Get("/", handlers.Query{{.Name}})
+	{{camel .Name}}.Get("/:id", handlers.Find{{.Name}})
+	{{camel .Name}}.Post("/", handlers.Create{{.Name}})
+	{{camel .Name}}.Patch("/:id", handlers.Update{{.Name}})
+	{{camel .Name}}.Delete("/:id", handlers.Delete{{.Name}})
+  {{end -}}
 }
