@@ -50,24 +50,27 @@ func WithAuth(method authentication, methods ...authentication) extensionOption 
 	}
 }
 
-func WithServerConfig(config *ServerConfig) extensionOption {
+func WithServer(config ...*ServerConfig) extensionOption {
 	return func(e *extension) {
-		if config.Pkg == "" {
-			config.Pkg = "main"
+		if len(config) == 0 {
+			config = append(config, &ServerConfig{})
 		}
-		if config.FuncName == "" {
-			config.FuncName = "main"
+		if config[0].Pkg == "" {
+			config[0].Pkg = "main"
 		}
-		if config.Port == "" {
-			config.Port = "5000"
+		if config[0].FuncName == "" {
+			config[0].FuncName = "main"
 		}
-		if config.FileName == "" {
-			config.FileName = "main"
+		if config[0].Port == "" {
+			config[0].Port = "5000"
 		}
-		if config.Prefix == "" {
-			config.Prefix = "api"
+		if config[0].FileName == "" {
+			config[0].FileName = "main"
 		}
-		e.Config.Server = config
+		if config[0].Prefix == "" {
+			config[0].Prefix = "api"
+		}
+		e.Config.Server = config[0]
 	}
 }
 

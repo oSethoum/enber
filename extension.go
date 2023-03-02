@@ -45,21 +45,19 @@ func (e *extension) generate(next gen.Generator) gen.Generator {
 
 		if e.Config.Server != nil {
 			files = append(files, file{
-				Path:   "handlers/enber.go",
-				Buffer: parseTemplate("enber/enber_handler.go.tmpl", e.TemplateData),
-			}, file{
-				Path:   "routes/routes.go",
+				Path:   "routes/enber.go",
 				Buffer: parseTemplate("fiber/routes.go.tmpl", e.TemplateData),
 			}, file{
 				Path:   snake(e.TemplateData.Config.Server.FileName + ".go"),
 				Buffer: parseTemplate("fiber/server.go.tmpl", e.TemplateData),
 			})
+
 			for i, n := range g.Nodes {
 				e.TemplateData.InputNode = e.TemplateData.InputNodes[i]
 				e.TemplateData.QueryNode = e.TemplateData.QueryNodes[i]
 
 				files = append(files, file{
-					Path:   "handlers/" + snake(n.Name) + ".go",
+					Path:   "handlers/" + plural(snake(n.Name)) + ".go",
 					Buffer: parseTemplate("fiber/handlers.go.tmpl", e.TemplateData),
 				})
 			}

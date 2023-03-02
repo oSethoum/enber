@@ -13,10 +13,11 @@ import (
 )
 
 var (
+	plural   = gen.Funcs["plural"].(func(string) string)
 	snake    = gen.Funcs["snake"].(func(string) string)
 	singular = gen.Funcs["singular"].(func(string) string)
-	_camel   = gen.Funcs["camel"].(func(string) string)
-	camel    = func(s string) string { return _camel(snake(s)) }
+	oldCamel = gen.Funcs["camel"].(func(string) string)
+	camel    = func(s string) string { return oldCamel(snake(s)) }
 )
 
 func vin[T comparable](v T, a []T) bool {
@@ -345,31 +346,3 @@ func decodeAnnotation(v, out any) error {
 	err = json.Unmarshal(buffer, out)
 	return err
 }
-
-// func _hasId(n *gen.Type) bool {
-// 	for _, f := range n.Fields {
-// 		if strings.ToLower(f.Name) == "id" {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
-
-// func _findGoMode() (string, string, bool) {
-// 	pMod := ""
-// 	dir, err := os.Getwd()
-// 	if err != nil {
-// 		return "", "", false
-// 	}
-// 	found := false
-// 	for !found {
-// 		pMod = path.Join(dir, "go.mod")
-// 		_, err := os.Stat(pMod)
-// 		if err != nil {
-// 			dir = path.Join(dir, "..")
-// 		} else {
-// 			found = true
-// 		}
-// 	}
-// 	return dir, pMod, true
-// }

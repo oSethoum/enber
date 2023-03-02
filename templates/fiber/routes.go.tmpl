@@ -6,10 +6,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Init(app fiber.Router) {
-	app = app.Group("/{{.Config.Server.Prefix}}")
+func routes(r fiber.Router) {
+	{{- if eq .Config.Server.Prefix "" | not}}
+	r = r.Group("/{{.Config.Server.Prefix}}")
+	{{end -}}
 	{{range .QueryNodes}}
-	{{camel .Name}} := app.Group("/{{camel .Name | plural}}")
+	{{camel .Name}} := r.Group("/{{camel .Name | plural}}")
 	{{camel .Name}}.Get("/", handlers.Query{{.Name}})
 	{{camel .Name}}.Get("/:id", handlers.Find{{.Name}})
 	{{camel .Name}}.Post("/", handlers.Create{{.Name}})
